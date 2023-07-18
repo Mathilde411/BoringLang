@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.14...3.26)
 
 # Project name and a few useful settings. Other commands can pick up the results
 project(
-        BrOOinfuck
+        BoringLang
         VERSION 0.1
-        DESCRIPTION "A dumb object-oriented brainfuck VM"
+        DESCRIPTION "A dumb object-oriented language"
         LANGUAGES CXX)
 
 # Only do these if this is the main project, and not if it is included through add_subdirectory
@@ -54,9 +54,12 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 endif( )
 
 
-#if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/boost/CMakeLists.txt")
-#    message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
-#endif()
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/boost/CMakeLists.txt")
+    message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
+endif()
+
+# Extern libs:
+add_subdirectory(extern/boost EXCLUDE_FROM_ALL)
 
 # The compiled library code is here
 add_subdirectory(src)

@@ -1,22 +1,34 @@
-# Note that headers are optional, and do not affect add_library, but they will not
-# show up in IDEs unless they are listed in add_library.
 
-# Optionally glob, but only for CMake 3.12 or later:
-file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${BrOOinfuck_SOURCE_DIR}/include/brooinfuck/*.hpp")
+file(GLOB CORE_HEADER_LIST CONFIGURE_DEPENDS "${BoringLang_SOURCE_DIR}/include/core/boringlang/core/*.hpp")
+add_library(BoringLang.Core
+        SHARED
+        ${CORE_HEADER_LIST}
+        core/Class.cpp
+        core/Namespace.cpp
+        core/Namespaceable.cpp
+        core/NamespacePath.cpp
+        core/Method.cpp )
+target_link_libraries(BoringLang.Core Boost::algorithm)
+target_include_directories(BoringLang.Core PUBLIC ../include/core)
+target_compile_features(BoringLang.Core PUBLIC cxx_std_11)
 
-# Make an automatic library - will be static or dynamic based on user setting
-add_library(BrOOinfuck_lib
-        lib.cpp
-        ${HEADER_LIST})
 
-# We need this directory, and users of our library will need it too
-target_include_directories(BrOOinfuck_lib  PUBLIC ../include)
+file(GLOB VM_HEADER_LIST CONFIGURE_DEPENDS "${BoringLang_SOURCE_DIR}/include/vm/boringlang/vm/*.hpp")
+add_library(BoringLang.VM
+        SHARED
+        ${VM_HEADER_LIST}
+        vm/VM.cpp
+        vm/interpreter/Interpreter.cpp
+        vm/memory/MemoryManager.cpp )
+target_link_libraries(BoringLang.VM PUBLIC BoringLang.Core)
+target_include_directories(BoringLang.VM  PUBLIC ../include/vm)
+target_compile_features(BoringLang.VM PUBLIC cxx_std_11)
 
-# All users of this library will need at least C++11
-target_compile_features(BrOOinfuck_lib PUBLIC cxx_std_11)
-
-# IDEs should put the headers in a nice place
-source_group(
-        TREE "${PROJECT_SOURCE_DIR}/include"
-        PREFIX "Header Files"
-        FILES ${HEADER_LIST})
+file(GLOB COMPILER_HEADER_LIST CONFIGURE_DEPENDS "${BoringLang_SOURCE_DIR}/include/compiler/boringlang/compiler/*.hpp")
+add_library(BoringLang.Compiler
+        SHARED
+        ${COMPILER_HEADER_LIST}
+        compiler/Compiler.cpp )
+target_link_libraries(BoringLang.Compiler PUBLIC BoringLang.Core)
+target_include_directories(BoringLang.Compiler  PUBLIC ../include/compiler)
+target_compile_features(BoringLang.Compiler PUBLIC cxx_std_11)
