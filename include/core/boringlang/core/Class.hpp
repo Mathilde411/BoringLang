@@ -12,7 +12,7 @@
 #include <map>
 
 namespace BoringLang {
-    class Class : Namespaceable {
+    class Class : public Namespaceable {
     protected:
         Class* _superclass;
 
@@ -25,7 +25,7 @@ namespace BoringLang {
         std::map<std::string, int> _variablesNames;
 
         Method** _methods;
-        Class** _variables;
+        Class** _variableTypes;
 
         Format _format;
 
@@ -44,6 +44,14 @@ namespace BoringLang {
               int variables);
 
         ~Class();
+
+        Method* getMethod(int index);
+
+        Method* getMethod(std::string const& name);
+
+        Class* getVariableType(int index);
+
+        Class* getVariableType(std::string const& name);
     };
 }
 

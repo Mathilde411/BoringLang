@@ -14,9 +14,10 @@ namespace BoringLang {
 
         NO_TYPE          = 0b000 << 3,
         INT              = 0b001 << 3,
-        UINT             = 0b010 << 3,
-        FLOAT            = 0b011 << 3,
-        CHAR             = 0b100 << 3,
+        FLOAT            = 0b010 << 3,
+        CHAR             = 0b011 << 3,
+        BOOL             = 0b100 << 3,
+        STRING           = 0b101 << 3,
         TYPE_MASK        = 0b111 << 3,
 
         NO_SIZE          = 0b000,
@@ -29,9 +30,10 @@ namespace BoringLang {
 
 
         PRIMITIVE_INT    = PRIMITIVE | INT     | SIZE64,
-        PRIMITIVE_UINT   = PRIMITIVE | UINT    | SIZE64,
         PRIMITIVE_FLOAT  = PRIMITIVE | FLOAT   | SIZE64,
         PRIMITIVE_CHAR   = PRIMITIVE | CHAR    | SIZE64,
+        PRIMITIVE_BOOL   = PRIMITIVE | BOOL    | SIZE64,
+        PRIMITIVE_STRING = PRIMITIVE | STRING  | SIZE64,
 
         BASE             = FIXED     | NO_TYPE | NO_SIZE
     };

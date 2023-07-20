@@ -41,25 +41,30 @@ bool Namespace::isNamespace() {
 
 Namespaceable* Namespace::findOrCreate(NamespacePath const& path) {
 
-    Namespace* returnValue = path.isRooted() ? _root : this;
+    Namespaceable* returnValue = path.isRooted() ? _root : this;
+    int depth = path.getDepth();
 
-    for (int i = 0; i < path.getDepth(); i++) {
+    for (int i = 0; i < depth; i++) {
         std::string name = path.getComponents()[i];
-        if (returnValue->_indexedChildren.count(name) > 0) {
-            if (!path.isNamespace()) {
-                throw std::invalid_argument("Not implemented.");
+        Namespace* ns = ((Namespace*) returnValue);
+
+        if (!path.isNamespace() && i == depth - 1) {
+            if (ns->_indexedClasses.count(name) > 0) {
+                returnValue = ns->_indexedClasses[name];
             } else {
-                returnValue = returnValue->_indexedChildren[name];
+                return nullptr;
             }
         } else {
-            if (!path.isNamespace()) {
-                throw std::invalid_argument("The path points to a non-existent class-like member.");
+            if (ns->_indexedChildren.count(name) > 0) {
+                returnValue = ns->_indexedChildren[name];
             } else {
-                returnValue = new Namespace(name, returnValue);
-                returnValue->_parent->_children.insert(returnValue);
-                returnValue->_parent->_indexedChildren[name] = returnValue;
+                ns = new Namespace(name, ns);
+                ns->_parent->_children.insert(ns);
+                ns->_parent->_indexedChildren[name] = ns;
+                returnValue = ns;
             }
         }
+
     }
 
     return returnValue;
@@ -71,18 +76,24 @@ Namespaceable* Namespace::findOrCreate(std::string const& path) {
 }
 
 Namespaceable* Namespace::find(NamespacePath const& path) {
-    Namespace* returnValue = path.isRooted() ? _root : this;
-
-    for (int i = 0; i < path.getDepth(); i++) {
+    Namespaceable* returnValue = path.isRooted() ? _root : this;
+    int depth = path.getDepth();
+    for (int i = 0; i < depth; i++) {
         std::string name = path.getComponents()[i];
-        if (returnValue->_indexedChildren.count(name) > 0) {
-            if (!path.isNamespace()) {
-                throw std::invalid_argument("Not implemented.");
+        Namespace* ns = ((Namespace*) returnValue);
+
+        if (!path.isNamespace() && i == depth - 1) {
+            if (ns->_indexedClasses.count(name) > 0) {
+                returnValue = ns->_indexedClasses[name];
             } else {
-                returnValue = returnValue->_indexedChildren[name];
+                return nullptr;
             }
         } else {
-            return nullptr;
+            if (ns->_indexedChildren.count(name) > 0) {
+                returnValue = ns->_indexedChildren[name];
+            } else {
+                return nullptr;
+            }
         }
     }
 
@@ -92,4 +103,10 @@ Namespaceable* Namespace::find(NamespacePath const& path) {
 Namespaceable* Namespace::find(std::string const& path) {
     NamespacePath nsPath(path);
     return this->find(nsPath);
+}
+
+void Namespace::addClass(Class* clazz) {
+
+
+
 }

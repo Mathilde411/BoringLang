@@ -49,6 +49,8 @@ namespace BoringLang {
 
         void removeChild(Namespace* pNamespace);
 
+        void addClass(Class* clazz);
+
         bool isNamespace() override;
 
         Namespaceable* findOrCreate(NamespacePath const& path);
