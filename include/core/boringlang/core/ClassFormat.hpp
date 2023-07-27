@@ -2,11 +2,11 @@
 // Created by mathilde on 16/07/23.
 //
 
-#ifndef BORINGVM_FORMAT_HPP
-#define BORINGVM_FORMAT_HPP
+#ifndef BORINGLANG_CLASSFORMAT_HPP
+#define BORINGLANG_CLASSFORMAT_HPP
 
 namespace BoringLang {
-    enum Format {
+    enum ClassFormat {
         FIXED            = 0b00  << 6,
         INDEXABLE        = 0b10  << 6,
         PRIMITIVE        = 0b01  << 6,
@@ -29,14 +29,14 @@ namespace BoringLang {
         SIZE_MASK        = 0b111,
 
 
-        PRIMITIVE_INT    = PRIMITIVE | INT     | SIZE64,
-        PRIMITIVE_FLOAT  = PRIMITIVE | FLOAT   | SIZE64,
-        PRIMITIVE_CHAR   = PRIMITIVE | CHAR    | SIZE64,
-        PRIMITIVE_BOOL   = PRIMITIVE | BOOL    | SIZE64,
-        PRIMITIVE_STRING = PRIMITIVE | STRING  | SIZE64,
+        PRIMITIVE_INT    = PRIMITIVE | INT     | NO_SIZE,
+        PRIMITIVE_FLOAT  = PRIMITIVE | FLOAT   | NO_SIZE,
+        PRIMITIVE_CHAR   = PRIMITIVE | CHAR    | NO_SIZE,
+        PRIMITIVE_BOOL   = PRIMITIVE | BOOL    | NO_SIZE,
+        PRIMITIVE_STRING = PRIMITIVE | STRING  | NO_SIZE,
 
         BASE             = FIXED     | NO_TYPE | NO_SIZE
     };
 }
 
-#endif //BORINGVM_FORMAT_HPP
+#endif //BORINGLANG_CLASSFORMAT_HPP

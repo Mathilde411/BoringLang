@@ -2,8 +2,8 @@
 // Created by mathilde on 11/07/23.
 //
 
-#ifndef BROOINFUCK_BRAINFUCKVM_HPP
-#define BROOINFUCK_BRAINFUCKVM_HPP
+#ifndef BORINGLANG_VM_HPP
+#define BORINGLANG_VM_HPP
 
 namespace BoringLang  {
     class VM {
@@ -11,4 +11,4 @@ namespace BoringLang  {
 };
 
 
-#endif //BROOINFUCK_BRAINFUCKVM_HPP
+#endif //BORINGLANG_VM_HPP

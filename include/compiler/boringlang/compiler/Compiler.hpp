@@ -2,8 +2,8 @@
 // Created by mathilde on 18/07/23.
 //
 
-#ifndef BORINGLANG_BORINGCOMPILER_HPP
-#define BORINGLANG_BORINGCOMPILER_HPP
+#ifndef BORINGLANG_COMPILER_HPP
+#define BORINGLANG_COMPILER_HPP
 
 
 namespace BoringLang {
@@ -13,4 +13,4 @@ namespace BoringLang {
 }
 
 
-#endif //BORINGLANG_BORINGCOMPILER_HPP
+#endif //BORINGLANG_COMPILER_HPP

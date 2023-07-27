@@ -2,8 +2,8 @@
 // Created by mathilde on 11/07/23.
 //
 
-#ifndef BORINGVM_NAMESPACEABLE_HPP
-#define BORINGVM_NAMESPACEABLE_HPP
+#ifndef BORINGLANG_NAMESPACEABLE_HPP
+#define BORINGLANG_NAMESPACEABLE_HPP
 
 #include <string>
 #include <regex>
@@ -34,4 +34,4 @@ namespace BoringLang {
 
 #include "Namespace.hpp"
 
-#endif //BORINGVM_NAMESPACEABLE_HPP
+#endif //BORINGLANG_NAMESPACEABLE_HPP

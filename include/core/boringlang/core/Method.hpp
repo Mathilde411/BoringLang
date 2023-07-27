@@ -2,8 +2,8 @@
 // Created by mathilde on 16/07/23.
 //
 
-#ifndef BORINGVM_METHOD_HPP
-#define BORINGVM_METHOD_HPP
+#ifndef BORINGLANG_METHOD_HPP
+#define BORINGLANG_METHOD_HPP
 
 #include <map>
 #include <string>
@@ -13,6 +13,9 @@ namespace BoringLang {
     class Class;
     class Method {
     protected:
+        Class* returnType;
+        int _parametersSize;
+        Class** _parameters;
         int _variablesSize;
         Class** _variables;
         int _codeSize;
@@ -21,4 +24,4 @@ namespace BoringLang {
 }
 
 #include "Class.hpp"
-#endif //BORINGVM_METHOD_HPP
+#endif //BORINGLANG_METHOD_HPP

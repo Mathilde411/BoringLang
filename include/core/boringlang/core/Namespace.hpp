@@ -2,8 +2,8 @@
 // Created by mathilde on 11/07/23.
 //
 
-#ifndef BORINGVM_NAMESPACE_HPP
-#define BORINGVM_NAMESPACE_HPP
+#ifndef BORINGLANG_NAMESPACE_HPP
+#define BORINGLANG_NAMESPACE_HPP
 
 
 #include <string>
@@ -67,4 +67,4 @@ namespace BoringLang {
 #include "Class.hpp"
 #include "NamespacePath.hpp"
 
-#endif //BORINGVM_NAMESPACE_HPP
+#endif //BORINGLANG_NAMESPACE_HPP

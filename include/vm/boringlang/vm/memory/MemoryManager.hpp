@@ -2,8 +2,8 @@
 // Created by mathilde on 11/07/23.
 //
 
-#ifndef BORINGVM_MEMORYMANAGER_HPP
-#define BORINGVM_MEMORYMANAGER_HPP
+#ifndef BORINGLANG_MEMORYMANAGER_HPP
+#define BORINGLANG_MEMORYMANAGER_HPP
 
 
 namespace BoringLang {
@@ -14,4 +14,4 @@ namespace BoringLang {
 }
 
 
-#endif //BORINGVM_MEMORYMANAGER_HPP
+#endif //BORINGLANG_MEMORYMANAGER_HPP

@@ -2,13 +2,14 @@
 // Created by mathilde on 11/07/23.
 //
 
-#ifndef BORINGVM_CLASS_HPP
-#define BORINGVM_CLASS_HPP
+#ifndef BORINGLANG_CLASS_HPP
+#define BORINGLANG_CLASS_HPP
 
 
 #include "Namespaceable.hpp"
 #include "Method.hpp"
-#include "Format.hpp"
+#include "InstanceVariable.hpp"
+#include "ClassFormat.hpp"
 #include <map>
 
 namespace BoringLang {
@@ -20,26 +21,27 @@ namespace BoringLang {
         int _numberOfVariables;
         int _definedMethodsStart;
         int _definedVariablesStart;
-
-        std::map<std::string, int> _methodsNames;
-        std::map<std::string, int> _variablesNames;
+        int _sizeOfLiterals;
 
         Method** _methods;
-        Class** _variableTypes;
+        InstanceVariable** _variableTypes;
+        uint64_t* _literals;
 
-        Format _format;
+        ClassFormat _format;
 
     public:
         Class(std::string const& name,
-              Format format,
+              ClassFormat format,
               Namespace* ns,
+              int sizeOfLiterals,
               int methods,
               int variables);
 
         Class(std::string const& name,
-              Format format,
+              ClassFormat format,
               Namespace* ns,
               Class* superclass,
+              int sizeOfLiterals,
               int methods,
               int variables);
 
@@ -47,13 +49,9 @@ namespace BoringLang {
 
         Method* getMethod(int index);
 
-        Method* getMethod(std::string const& name);
-
-        Class* getVariableType(int index);
-
-        Class* getVariableType(std::string const& name);
+        InstanceVariable* getVariable(int index);
     };
 }
 
 
-#endif //BORINGVM_CLASS_HPP
+#endif //BORINGLANG_CLASS_HPP

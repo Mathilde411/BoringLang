@@ -8,15 +8,17 @@ using namespace BoringLang;
 
 
 Class::Class(const std::string& name,
-             Format format,
+             ClassFormat format,
              Namespace* parent,
+             int sizeOfLiterals,
              int methods,
-             int variables) : Class(name, format, parent, nullptr, methods, variables) {}
+             int variables) : Class(name, format, parent, nullptr, sizeOfLiterals, methods, variables) {}
 
 Class::Class(const std::string& name,
-             Format format,
+             ClassFormat format,
              Namespace* parent,
              Class* superclass,
+             int sizeOfLiterals,
              int methods,
              int variables) : Namespaceable(name, parent) {
     _superclass = superclass;
@@ -26,9 +28,11 @@ Class::Class(const std::string& name,
     _numberOfVariables = variables + (_superclass == nullptr ? 0 : _superclass->_numberOfVariables);
     _definedMethodsStart = methods - _numberOfMethods;
     _definedVariablesStart = variables - _numberOfVariables;
+    _sizeOfLiterals = sizeOfLiterals;
 
     _methods = new Method* [_numberOfMethods];
-    _variableTypes = new Class* [_numberOfVariables];
+    _variableTypes = new InstanceVariable* [_numberOfVariables];
+    _literals = new uint64_t [_sizeOfLiterals];
 }
 
 Class::~Class() {
@@ -51,15 +55,14 @@ Method* Class::getMethod(int index) {
     return  inspected->_methods[index];
 }
 
-Method* Class::getMethod(const std::string& name) {
-    return nullptr;
-}
+InstanceVariable* Class::getVariable(int index) {
+    if(index < 0 || index >= _numberOfMethods)
+        throw std::invalid_argument("Variable index is out of bounds.");
 
-Class* Class::getVariableType(int index) {
-    return nullptr;
-}
+    Class* inspected = this;
+    while(inspected->_variableTypes[index] == nullptr && index < inspected->_definedVariablesStart)
+        inspected = inspected->_superclass;
 
-Class* Class::getVariableType(const std::string& name) {
-    return nullptr;
+    return  inspected->_variableTypes[index];
 }
 
