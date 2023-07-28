@@ -124,11 +124,17 @@ void Namespace::addClass(Class* clazz) {
 }
 
 bool stringEqualsIgnoreCase(const std::string& a, const std::string& b) {
-    return std::equal(a.begin(), a.end(),
-                      b.begin(), b.end(),
-                      [](char a, char b) {
-                          return tolower(a) == tolower(b);
-                      });
+    auto startA = a.begin();
+    auto endA = a.end();
+    auto startB = b.begin();
+    auto endB = b.end();
+    auto fun = [](char a, char b) {
+        return tolower(a) < tolower(b);
+    };
+
+    auto res =  std::lexicographical_compare(startA, endA, startB, endB, fun);
+
+    return res;
 }
 
 bool NamespaceableComparator::operator()(Namespaceable* a, Namespaceable* b) const {

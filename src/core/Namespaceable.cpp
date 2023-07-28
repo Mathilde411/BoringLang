@@ -23,8 +23,6 @@ Namespaceable::Namespaceable(std::string const& name, Namespace* parent) {
     _parent = parent;
     _name = new std::string(name);
     _root = parent == nullptr ? nullptr : parent->getRoot();
-
-    std::cout << this << " created" << std::endl;
 }
 
 std::string* Namespaceable::getName() {
@@ -46,6 +44,5 @@ Namespace* Namespaceable::getRoot() {
 Namespaceable::~Namespaceable() {
     delete _name;
     _name = nullptr;
-    std::cout << this << " destroyed" << std::endl;
 }
 

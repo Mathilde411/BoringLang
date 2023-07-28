@@ -13,3 +13,25 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <https:#www.gnu.org/licenses/>.
+
+FetchContent_Declare(
+        catch
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG v3.4.0)
+FetchContent_MakeAvailable(catch)
+
+add_executable(BoringLang.Core.Tests
+        test.cpp
+        core/namespaceTests.cpp)
+target_link_libraries(BoringLang.Core.Tests PUBLIC BoringLang.Core Catch2::Catch2WithMain)
+add_test(NAME "BoringLang Core Tests" COMMAND BoringLang.Core.Tests)
+
+#add_executable(BoringLang.VM.Tests
+#        test.cpp)
+#target_link_libraries(BoringLang.VM.Tests PUBLIC BoringLang.VM Catch2::Catch2WithMain)
+#add_test(NAME "BoringLang VM Tests" COMMAND BoringLang.VM.Tests)
+
+#add_executable(BoringLang.Compiler.Tests
+#        test.cpp)
+#target_link_libraries(BoringLang.Compiler.Tests PUBLIC BoringLang.Compiler Catch2::Catch2WithMain)
+#add_test(NAME "BoringLang Compiler Tests" COMMAND BoringLang.Compiler.Tests)

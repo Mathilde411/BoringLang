@@ -9,5 +9,8 @@
       <file path="$PROJECT_DIR$/include/vm" />
       <file path="$PROJECT_DIR$/src" />
     </sourceRoots>
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/build" />
+    </excludeRoots>
   </component>
 </project>

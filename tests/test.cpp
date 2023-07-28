@@ -14,10 +14,4 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <cstdlib>
-#include <cstdint>
-#include <cstdio>
-
-int main() {
-    return 0;
-}
+#include <catch2/catch_all.hpp>
