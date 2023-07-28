@@ -3,7 +3,7 @@
 //
 
 #include "boringlang/core/Namespace.hpp"
-
+#include <algorithm>
 
 using namespace BoringLang;
 
@@ -109,4 +109,20 @@ void Namespace::addClass(Class* clazz) {
 
 
 
+}
+
+bool stringEqualsIgnoreCase(const std::string& a, const std::string& b) {
+    return std::equal(a.begin(), a.end(),
+                      b.begin(), b.end(),
+                      [](char a, char b) {
+                          return tolower(a) == tolower(b);
+                      });
+}
+
+bool NamespaceableComparator::operator()(Namespaceable* a, Namespaceable* b) const {
+    return stringEqualsIgnoreCase(*a->getName(), *b->getName());
+}
+
+bool NamespaceableNameComparator::operator()(const std::string& a, const std::string& b) const {
+    return stringEqualsIgnoreCase(a, b);
 }

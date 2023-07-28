@@ -9,24 +9,17 @@
 #include <string>
 #include <set>
 #include "Namespaceable.hpp"
-#include "boost/algorithm/string/predicate.hpp"
 
 namespace BoringLang {
     class NamespacePath;
     class Class;
 
     struct NamespaceableComparator {
-        bool operator()(Namespaceable* a,
-                        Namespaceable* b) const {
-            return boost::ilexicographical_compare(*a->getName(), *b->getName());
-        }
+        bool operator()(Namespaceable* a, Namespaceable* b) const;
     };
 
     struct NamespaceableNameComparator {
-        bool operator()(std::string const& a,
-                        std::string const& b) const {
-            return boost::ilexicographical_compare(a, b);
-        }
+        bool operator()(std::string const& a, std::string const& b) const;
     };
 
     class Namespace : public Namespaceable {
