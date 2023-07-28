@@ -1,3 +1,1 @@
-[submodule "extern/boost"]
-	path = extern/boost
-	url = https://github.com/boostorg/boost.git
+
