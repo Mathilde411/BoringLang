@@ -12,7 +12,7 @@
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU Lesser General Public License
-#     along with this program.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 FetchContent_Declare(
         catch
@@ -20,18 +20,21 @@ FetchContent_Declare(
         GIT_TAG v3.4.0)
 FetchContent_MakeAvailable(catch)
 
-add_executable(BoringLang.Core.Tests
+add_executable(${${PROJECT_NAME}_CORE_TEST}
         test.cpp
         core/namespaceTests.cpp)
-target_link_libraries(BoringLang.Core.Tests PUBLIC BoringLang.Core Catch2::Catch2WithMain)
-add_test(NAME "BoringLang Core Tests" COMMAND BoringLang.Core.Tests)
+target_link_libraries(${${PROJECT_NAME}_CORE_TEST} PUBLIC ${${PROJECT_NAME}_CORE_LIB} Catch2::Catch2WithMain)
+add_test(NAME ${${PROJECT_NAME}_CORE_TEST} COMMAND ${${PROJECT_NAME}_CORE_TEST})
+set_tests_properties(${${PROJECT_NAME}_CORE_TEST} PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${${PROJECT_NAME}_OUTPUT}")
 
-#add_executable(BoringLang.VM.Tests
+#add_executable(${${PROJECT_NAME}_VM_TEST}
 #        test.cpp)
-#target_link_libraries(BoringLang.VM.Tests PUBLIC BoringLang.VM Catch2::Catch2WithMain)
-#add_test(NAME "BoringLang VM Tests" COMMAND BoringLang.VM.Tests)
+#target_link_libraries(${${PROJECT_NAME}_VM_TEST} PUBLIC ${${PROJECT_NAME}_VM_LIB} Catch2::Catch2WithMain)
+#add_test(NAME ${${PROJECT_NAME}_VM_TEST} COMMAND ${${PROJECT_NAME}_VM_TEST})
+#set_tests_properties(${${PROJECT_NAME}_VM_TEST} PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${${PROJECT_NAME}_OUTPUT}")
 
-#add_executable(BoringLang.Compiler.Tests
+#add_executable(${${PROJECT_NAME}_COMPILER_TEST}
 #        test.cpp)
-#target_link_libraries(BoringLang.Compiler.Tests PUBLIC BoringLang.Compiler Catch2::Catch2WithMain)
-#add_test(NAME "BoringLang Compiler Tests" COMMAND BoringLang.Compiler.Tests)
+#target_link_libraries(${${PROJECT_NAME}_COMPILER_TEST} PUBLIC ${${PROJECT_NAME}_COMPILER_LIB} Catch2::Catch2WithMain)
+#add_test(NAME ${${PROJECT_NAME}_COMPILER_TEST} COMMAND BoringLang.Compiler.Tests)
+#set_tests_properties(${${PROJECT_NAME}_COMPILER_TEST} PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${${PROJECT_NAME}_OUTPUT}")

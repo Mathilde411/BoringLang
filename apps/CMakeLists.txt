@@ -12,10 +12,15 @@
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU Lesser General Public License
-#     along with this program.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-add_executable(BoringVM vm/main.cpp)
-target_link_libraries(BoringVM PRIVATE BoringLang.VM)
+add_executable(${${PROJECT_NAME}_VM_EXEC} vm/main.cpp)
+target_link_libraries(${${PROJECT_NAME}_VM_EXEC}
+        PRIVATE ${${PROJECT_NAME}_VM_LIB})
 
-add_executable(BoringCompiler compiler/main.cpp)
-target_link_libraries(BoringCompiler PRIVATE BoringLang.Compiler)
+add_executable(${${PROJECT_NAME}_COMPILER_EXEC} compiler/main.cpp)
+target_link_libraries(${${PROJECT_NAME}_COMPILER_EXEC}
+        PRIVATE ${${PROJECT_NAME}_COMPILER_LIB})
+
+install(TARGETS ${${PROJECT_NAME}_VM_EXEC} ${${PROJECT_NAME}_COMPILER_EXEC}
+        DESTINATION bin)

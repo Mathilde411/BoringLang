@@ -40,3 +40,19 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
 
+    - name: Package
+      run: cmake --install ${{github.workspace}}/build --prefix ${{github.workspace}}/install --strip
+
+    - name: Upload Package
+      uses: actions/upload-artifact@v3
+      with:
+        name: package-${{ matrix.os }}
+        path: ${{github.workspace}}/install
+
+    - name: Upload Result
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: result-${{ matrix.os }}
+        path: ${{github.workspace}}/build
+

@@ -12,7 +12,7 @@
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU Lesser General Public License
-#     along with this program.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Works with 3.20 and tested through 3.26
 cmake_minimum_required(VERSION 3.20...3.26)
@@ -24,17 +24,35 @@ project(
         DESCRIPTION "A dumb object-oriented language"
         LANGUAGES CXX)
 
-# Only do these if this is the main project, and not if it is included through add_subdirectory
+
+set(${PROJECT_NAME}_OUTPUT          "${CMAKE_BINARY_DIR}/output/${PROJECT_NAME}")
+
+IF (WIN32)
+    set(${PROJECT_NAME}_LIB_INSTALL     "")
+    set(${PROJECT_NAME}_EXEC_INSTALL    "")
+ELSE()
+    set(${PROJECT_NAME}_LIB_INSTALL     "lib")
+    set(${PROJECT_NAME}_EXEC_INSTALL    "bin")
+ENDIF()
+set(${PROJECT_NAME}_LICENSE_INSTALL "legal")
+
+set(${PROJECT_NAME}_CORE_LIB        "${PROJECT_NAME}Core")
+set(${PROJECT_NAME}_VM_LIB          "${PROJECT_NAME}VM")
+set(${PROJECT_NAME}_COMPILER_LIB    "${PROJECT_NAME}Compiler")
+set(${PROJECT_NAME}_VM_EXEC         "boringcompiler")
+set(${PROJECT_NAME}_COMPILER_EXEC   "boringvm")
+set(${PROJECT_NAME}_CORE_TEST       "${${PROJECT_NAME}_CORE_LIB}Test")
+set(${PROJECT_NAME}_VM_TEST         "${${PROJECT_NAME}_VM_LIB}Test")
+set(${PROJECT_NAME}_COMPILER_TEST   "${${PROJECT_NAME}_COMPILER_LIB}Test")
+
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-
-    # Optionally set things like CMAKE_CXX_STANDARD, CMAKE_POSITION_INDEPENDENT_CODE here
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${${PROJECT_NAME}_OUTPUT})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${${PROJECT_NAME}_OUTPUT})
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
     set(CMAKE_CXX_STANDARD 23)
-
-    # Let's ensure -std=c++xx instead of -std=g++xx
     set(CMAKE_CXX_EXTENSIONS OFF)
-
-    # Let's nicely support folders in IDEs
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 
     # Testing only available if this is the main app
     # Note this needs to be done in the main CMakeLists
@@ -60,6 +78,9 @@ add_subdirectory(src)
 
 # The executable code is here
 add_subdirectory(apps)
+
+install(FILES COPYING.md COPYING.LESSER.md
+        DESTINATION legal)
 
 # Testing only available if this is the main app
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well

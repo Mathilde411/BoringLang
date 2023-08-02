@@ -12,34 +12,36 @@
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU Lesser General Public License
-#     along with this program.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 file(GLOB CORE_HEADER_LIST CONFIGURE_DEPENDS "${BoringLang_SOURCE_DIR}/include/core/boringlang/core/*.hpp")
-add_library(BoringLang.Core
+add_library(${${PROJECT_NAME}_CORE_LIB}
         SHARED
         ${CORE_HEADER_LIST}
         core/Class.cpp
         core/Namespace.cpp
         core/Namespaceable.cpp
         core/NamespacePath.cpp
-        core/Method.cpp )
-target_include_directories(BoringLang.Core PUBLIC ../include/core)
-
+        core/Method.cpp)
+target_include_directories(${${PROJECT_NAME}_CORE_LIB} PUBLIC ../include/core)
 
 file(GLOB VM_HEADER_LIST CONFIGURE_DEPENDS "${BoringLang_SOURCE_DIR}/include/vm/boringlang/vm/*.hpp")
-add_library(BoringLang.VM
+add_library(${${PROJECT_NAME}_VM_LIB}
         SHARED
         ${VM_HEADER_LIST}
         vm/VM.cpp
         vm/interpreter/Interpreter.cpp
-        vm/memory/MemoryManager.cpp )
-target_link_libraries(BoringLang.VM PUBLIC BoringLang.Core)
-target_include_directories(BoringLang.VM  PUBLIC ../include/vm)
+        vm/memory/MemoryManager.cpp)
+target_link_libraries(${${PROJECT_NAME}_VM_LIB} PUBLIC ${${PROJECT_NAME}_CORE_LIB})
+target_include_directories(${${PROJECT_NAME}_VM_LIB} PUBLIC ../include/vm)
 
 file(GLOB COMPILER_HEADER_LIST CONFIGURE_DEPENDS "${BoringLang_SOURCE_DIR}/include/compiler/boringlang/compiler/*.hpp")
-add_library(BoringLang.Compiler
+add_library(${${PROJECT_NAME}_COMPILER_LIB}
         SHARED
         ${COMPILER_HEADER_LIST}
-        compiler/Compiler.cpp )
-target_link_libraries(BoringLang.Compiler PUBLIC BoringLang.Core)
-target_include_directories(BoringLang.Compiler  PUBLIC ../include/compiler)
+        compiler/Compiler.cpp)
+target_link_libraries(${${PROJECT_NAME}_COMPILER_LIB} PUBLIC ${${PROJECT_NAME}_CORE_LIB})
+target_include_directories(${${PROJECT_NAME}_COMPILER_LIB} PUBLIC ../include/compiler)
+
+install(TARGETS ${${PROJECT_NAME}_CORE_LIB} ${${PROJECT_NAME}_VM_LIB} ${${PROJECT_NAME}_COMPILER_LIB}
+        DESTINATION lib)
