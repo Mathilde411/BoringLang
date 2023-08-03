@@ -44,4 +44,4 @@ target_link_libraries(${${PROJECT_NAME}_COMPILER_LIB} PUBLIC ${${PROJECT_NAME}_C
 target_include_directories(${${PROJECT_NAME}_COMPILER_LIB} PUBLIC ../include/compiler)
 
 install(TARGETS ${${PROJECT_NAME}_CORE_LIB} ${${PROJECT_NAME}_VM_LIB} ${${PROJECT_NAME}_COMPILER_LIB}
-        DESTINATION lib)
+        DESTINATION ${${PROJECT_NAME}_LIB_INSTALL})

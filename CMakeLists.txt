@@ -80,7 +80,7 @@ add_subdirectory(src)
 add_subdirectory(apps)
 
 install(FILES COPYING.md COPYING.LESSER.md
-        DESTINATION legal)
+        DESTINATION ${${PROJECT_NAME}_LICENSE_INSTALL})
 
 # Testing only available if this is the main app
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well
