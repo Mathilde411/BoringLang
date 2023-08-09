@@ -1,3 +1,5 @@
+
+
 //     BoringLang Project
 //     Copyright (C) 2023  Mathilde Pascal
 //
@@ -14,13 +16,6 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BORINGLANG_INSTANCEVARIABLEFORMAT_HPP
-#define BORINGLANG_INSTANCEVARIABLEFORMAT_HPP
+#include "../../../include/core/boringlang/core/util/StringUtil.hpp"
 
-namespace BoringLang {
-    enum InstanceVariableFormat {
-
-    };
-}
-
-#endif //BORINGLANG_INSTANCEVARIABLEFORMAT_HPP
+using namespace BoringLang;

@@ -1,3 +1,5 @@
+
+
 //     BoringLang Project
 //     Copyright (C) 2023  Mathilde Pascal
 //
@@ -14,13 +16,11 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BORINGLANG_METHODFORMAT_HPP
-#define BORINGLANG_METHODFORMAT_HPP
+#ifndef BORINGLANG_CONSTANTS_HPP
+#define BORINGLANG_CONSTANTS_HPP
 
-namespace BoringLang {
-    enum MethodFormat {
+#define BORINGLANG_MAJOR_VERSION 0
+#define BORINGLANG_MINOR_VERSION 1
+#define BORINGLANG_MAGIC_NUMBER 0xbe11ec1e
 
-    };
-}
-
-#endif //BORINGLANG_METHODFORMAT_HPP
+#endif //BORINGLANG_CONSTANTS_HPP

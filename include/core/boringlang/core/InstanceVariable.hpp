@@ -19,7 +19,7 @@
 
 #include <map>
 #include <string>
-#include "Types.hpp"
+#include "boringlang/core/util/TypesUtil.hpp"
 
 namespace BoringLang {
     class Class;

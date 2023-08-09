@@ -22,7 +22,11 @@ add_library(${${PROJECT_NAME}_CORE_LIB}
         core/Namespace.cpp
         core/Namespaceable.cpp
         core/NamespacePath.cpp
-        core/Method.cpp)
+        core/Method.cpp
+        core/ClassFile.cpp
+        core/util/BinaryStreamUtil.cpp
+        core/util/StringUtil.cpp
+        core/util/TypesUtil.cpp)
 target_include_directories(${${PROJECT_NAME}_CORE_LIB} PUBLIC ../include/core)
 
 file(GLOB VM_HEADER_LIST CONFIGURE_DEPENDS "${BoringLang_SOURCE_DIR}/include/vm/boringlang/vm/*.hpp")

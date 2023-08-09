@@ -1,3 +1,5 @@
+
+
 //     BoringLang Project
 //     Copyright (C) 2023  Mathilde Pascal
 //
@@ -14,15 +16,15 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BORINGLANG_TYPES_HPP
-#define BORINGLANG_TYPES_HPP
-
-#include <cstdint>
+#ifndef BORINGLANG_STRINGUTIL_HPP
+#define BORINGLANG_STRINGUTIL_HPP
 
 namespace BoringLang {
-    typedef uint64_t BvUInt;
-    typedef int64_t BvInt;
-    typedef double BvFloat;
-    typedef uint8_t BvBytecode;
-}
-#endif //BORINGLANG_TYPES_HPP
+
+    class StringUtil {
+
+    };
+
+} // BoringLang
+
+#endif //BORINGLANG_STRINGUTIL_HPP
