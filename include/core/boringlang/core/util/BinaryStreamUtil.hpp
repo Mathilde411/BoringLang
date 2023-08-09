@@ -19,7 +19,6 @@
 #ifndef BORINGLANG_BINARYSTREAMUTIL_HPP
 #define BORINGLANG_BINARYSTREAMUTIL_HPP
 
-#include <byteswap.h>
 #include <istream>
 
 #if _WIN32
