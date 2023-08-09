@@ -153,4 +153,5 @@ TEST_CASE("testNextObject", "[testNextObject]") {
     (0x89ABCDUL);
 
     REQUIRE(BoringLang::ObjectHeader::nextObject(slot) == slot + 7);
+    REQUIRE(false);
 }
