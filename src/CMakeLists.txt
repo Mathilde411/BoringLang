@@ -28,6 +28,9 @@ add_library(${${PROJECT_NAME}_CORE_LIB}
         core/util/StringUtil.cpp
         core/util/TypesUtil.cpp)
 target_include_directories(${${PROJECT_NAME}_CORE_LIB} PUBLIC ../include/core)
+if(WIN32)
+    target_link_libraries(${${PROJECT_NAME}_CORE_LIB} wsock32 ws2_32)
+endif()
 
 file(GLOB VM_HEADER_LIST CONFIGURE_DEPENDS "${BoringLang_SOURCE_DIR}/include/vm/boringlang/vm/*.hpp")
 add_library(${${PROJECT_NAME}_VM_LIB}

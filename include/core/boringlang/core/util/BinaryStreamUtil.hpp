@@ -22,7 +22,7 @@
 #include <istream>
 
 #if _WIN32
-#include <winsock.h>
+#include <winsock2.h>
 #else
 #include <arpa/inet.h>
 #endif
