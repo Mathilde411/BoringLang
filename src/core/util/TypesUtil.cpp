@@ -125,20 +125,20 @@ uint64_t ObjectHeader::getSlotSizeWithHeader() const {
 
 void ObjectHeader::exportHeader(BvSlot* slot) {
     if(_primitive) {
-        *slot = (((uint64_t)_format) << 56) + (_size & 0xFFFFFFFFFFFFFF);
+        *slot = (((uint64_t)_format) << 56) | (_size & 0xFFFFFFFFFFFFFF);
     } else {
         uint64_t miniSize;
         if(_doubleHeader) {
-            *slot = (0xFFUL << 56) + (_size & 0xFFFFFFFFFFFFFF);
+            *slot = (0xFFULL << 56) | (_size & 0xFFFFFFFFFFFFFF);
             miniSize = 0x7FUL;
             slot++;
         } else {
             miniSize = _size;
         }
-        *slot = (1UL << 63) +
-                (miniSize << 56) +
-                (((uint64_t) _hash) << 32) +
-                (((uint64_t) _flags) << 24) +
+        *slot = (1ULL << 63) |
+                (miniSize << 56) |
+                (((uint64_t) _hash) << 32) |
+                (((uint64_t) _flags) << 24) |
                 ((uint64_t) _classIndex);
     }
 }

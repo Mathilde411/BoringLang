@@ -39,14 +39,14 @@ namespace BoringLang {
         VARIABLE_HANDLE = 7,
 
         //UNSLOTED
-        BYTES = 0 + (1 << 6),
-        STRING = 1 + (1 << 6),
-        NAMESPACE = 2 + (1 << 6),
-        CLASS_PATH = 3 + (1 << 6),
-        CLASS_NAME = 4 + (1 << 6),
-        METHOD_NAME = 5 + (1 << 6),
-        VARIABLE_NAME = 6 + (1 << 6),
-        NAMESPACE_HANDLE = 7 + (1 << 6)
+        BYTES = 0 | (1 << 6),
+        STRING = 1 | (1 << 6),
+        NAMESPACE = 2 | (1 << 6),
+        CLASS_PATH = 3 | (1 << 6),
+        CLASS_NAME = 4 | (1 << 6),
+        METHOD_NAME = 5 | (1 << 6),
+        VARIABLE_NAME = 6 | (1 << 6),
+        NAMESPACE_HANDLE = 7 | (1 << 6)
     };
 
     class ObjectHeader {
