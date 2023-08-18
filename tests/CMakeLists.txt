@@ -24,6 +24,7 @@ add_executable(${${PROJECT_NAME}_CORE_TEST}
         test.cpp
         core/namespaceTests.cpp
         core/headerTests.cpp
+        core/classFileTest.cpp
 )
 target_link_libraries(${${PROJECT_NAME}_CORE_TEST} PUBLIC ${${PROJECT_NAME}_CORE_LIB} Catch2::Catch2WithMain)
 add_test(NAME ${${PROJECT_NAME}_CORE_TEST} COMMAND ${${PROJECT_NAME}_CORE_TEST})

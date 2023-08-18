@@ -14,11 +14,12 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <cstring>
 #include "boringlang/core/util/TypesUtil.hpp"
 
 using namespace BoringLang;
 
-ObjectHeader::ObjectHeader(BvSlot* header) {
+ObjectHeader::ObjectHeader(const BvSlot* header) {
     BvSlot value = *header;
     if((value >> 63) == 0) {
         this->loadPrimitiveHeader(header);
@@ -45,7 +46,7 @@ ObjectHeader::ObjectHeader(PrimitiveType format, uint64_t byteSize) {
 ObjectHeader::ObjectHeader(uint64_t byteSize, uint32_t hash, uint32_t classIndex, uint8_t flags) {
     _primitive = false;
     _doubleHeader = (byteSize >= 0x7F);
-    _format = NO_TYPE;
+    _format = VOID;
     _size = byteSize;
     _hash = hash;
     _classIndex = classIndex;
@@ -73,7 +74,7 @@ void ObjectHeader::loadSizeExtension(const BvSlot* slot) {
 void ObjectHeader::loadObjectHeader(const BvSlot* slot, bool loadSize) {
     BvSlot value = *slot;
     _primitive = false;
-    _format = NO_TYPE;
+    _format = VOID;
     if(loadSize) {
         _size = (value >> 56) & 0x7F;
         _doubleHeader = false;
@@ -87,8 +88,12 @@ bool ObjectHeader::isPrimitive() const {
     return _primitive;
 }
 
-bool ObjectHeader::isSloted() const {
-    return _primitive && ((_format & (1<<6)) != 0);
+bool ObjectHeader::isBytes() const {
+    return _primitive && ((_format & BYTES) != 0);
+}
+
+bool ObjectHeader::isString() const {
+    return _primitive && ((_format & STRING) != 0);
 }
 
 bool ObjectHeader::isDoubleHeader() const {
@@ -104,7 +109,7 @@ uint64_t ObjectHeader::getSize() const {
 }
 
 uint64_t ObjectHeader::getSlotSize() const {
-    return (_size / 8) + ((_size % 8) > 0 ? 1 : 0);
+    return (_size / sizeof(BvSlot)) + ((_size % sizeof(BvSlot)) > 0 ? 1 : 0);
 }
 
 uint32_t ObjectHeader::getHash() const {
@@ -146,4 +151,113 @@ void ObjectHeader::exportHeader(BvSlot* slot) {
 BvSlot* ObjectHeader::nextObject(BvSlot* slot) {
     ObjectHeader header(slot);
     return slot + header.getSlotSizeWithHeader();
+}
+
+int64_t PrimitivesUtil::getUnslotedInt(const BvSlot* slot) {
+    ObjectHeader header(slot);
+    if (header.getFormat() != INT)
+        throw PrimitiveTypeError("This object is not an unsloted integer.");
+    return getInt(slot + 1);
+}
+
+int64_t PrimitivesUtil::getInt(const BvSlot* slot) {
+    return *((int64_t*) slot);
+}
+
+void PrimitivesUtil::putUnslotedInt(BvSlot* slot, int64_t number) {
+    ObjectHeader header(INT, 8);
+    header.exportHeader(slot);
+    *((int64_t*)(slot + 1)) = number;
+}
+
+double PrimitivesUtil::getUnslotedFloat(const BvSlot* slot) {
+    ObjectHeader header(slot);
+    if (header.getFormat() != FLOAT)
+        throw PrimitiveTypeError("This object is not an unsloted floating-point number.");
+    return getFloat(slot + 1);
+}
+
+double PrimitivesUtil::getFloat(const BvSlot* slot) {
+    return *((double*) slot);
+}
+
+void PrimitivesUtil::putUnslotedFloat(BvSlot* slot, double number) {
+    ObjectHeader header(FLOAT, 8);
+    header.exportHeader(slot);
+    *((double*)(slot + 1)) = number;
+}
+
+char PrimitivesUtil::getUnslotedChar(const BvSlot* slot) {
+    ObjectHeader header(slot);
+    if (header.getFormat() != CHAR)
+        throw PrimitiveTypeError("This object is not an unsloted character.");
+    return getChar(slot + 1);
+}
+
+char PrimitivesUtil::getChar(const BvSlot* slot) {
+    return (char) (*((uint64_t*) slot) & 0xFF);
+}
+
+void PrimitivesUtil::putUnslotedChar(BvSlot* slot, char character) {
+    ObjectHeader header(CHAR, 8);
+    header.exportHeader(slot);
+    *((uint64_t*)(slot + 1)) = (unsigned char)(character);
+}
+
+bool PrimitivesUtil::getUnslotedBool(const BvSlot* slot) {
+    ObjectHeader header(slot);
+    if (header.getFormat() != BOOL)
+        throw PrimitiveTypeError("This object is not an unsloted boolean.");
+    return getBool(slot + 1);
+}
+
+bool PrimitivesUtil::getBool(const BvSlot* slot) {
+    return *((int64_t*) slot) != 0;
+}
+
+void PrimitivesUtil::putUnslotedBool(BvSlot* slot, bool boolean) {
+    ObjectHeader header(BOOL, 8);
+    header.exportHeader(slot);
+    *((uint64_t*)(slot + 1)) = boolean ? 1:0;
+}
+
+uint64_t PrimitivesUtil::getUnslotedBytes(const BvSlot* slot, uint8_t** bytes) {
+    ObjectHeader header(slot);
+    if (!header.isBytes())
+        throw PrimitiveTypeError("This object is not a byte array.");
+    *bytes = (uint8_t*) (slot + 1);
+    return header.getSize();
+}
+
+uint64_t PrimitivesUtil::copyUnslotedBytes(const BvSlot* slot, uint8_t** bytes) {
+    ObjectHeader header(slot);
+    if (!header.isBytes())
+        throw PrimitiveTypeError("This object is not a byte array.");
+    uint64_t size = header.getSize();
+    *bytes = (uint8_t*) malloc(size);
+    memcpy(*bytes, (uint8_t*) (slot + 1), size);
+    return size;
+}
+
+void PrimitivesUtil::putUnslotedBytes(BvSlot* slot, uint8_t* bytes, uint64_t size) {
+    ObjectHeader header(BYTES, size);
+    header.exportHeader(slot);
+    memcpy((uint8_t*) (slot + 1), bytes, size);
+}
+
+void PrimitivesUtil::copyUnslotedString(const BvSlot* slot, std::string& string) {
+    ObjectHeader header(slot);
+    if (!header.isBytes())
+        throw PrimitiveTypeError("This object is not a string.");
+    string.assign((char*) (slot+1), header.getSize());
+}
+
+void PrimitivesUtil::putUnslotedString(BvSlot* slot, std::string& string) {
+    putUnslotedString(slot, STRING, string);
+}
+
+void PrimitivesUtil::putUnslotedString(BvSlot* slot, PrimitiveType format, std::string& string) {
+    ObjectHeader header(format, string.size());
+    header.exportHeader(slot);
+    memcpy((uint8_t*) (slot + 1), string.c_str(), string.size());
 }

@@ -34,12 +34,13 @@ ClassFile::ClassFile() {
             0,
             nullptr,
             {
-                    0,
-                    0,
+                    0xFFFFFFFF,
+                    0xFFFFFFFF,
+                    0xFFFFFFFF,
                     false,
                     false,
                     8,
-                    NO_TYPE
+                    VOID
             },
             0,
             nullptr,
@@ -100,13 +101,30 @@ void ClassFile::importClass(std::istream& stream) {
 
 }
 
+void ClassFile::importLiterals(std::istream& stream, ClassHeader& header) {
+    BvSlot* currentLiteralsSlot = header._literals;
+    while((currentLiteralsSlot - header._literals) < header._literalsSize) {
+        *currentLiteralsSlot = BinaryStreamUtil::read64BitsNumberStream(stream);
+        BvSlot* data = currentLiteralsSlot + 1;
+        ObjectHeader literalHeader(currentLiteralsSlot);
+        if((currentLiteralsSlot - header._literals) + literalHeader.getSlotSizeWithHeader() > header._literalsSize)
+            throw ClassLoadingError("Literals size and headers do not match.");
+        if(!literalHeader.isBytes()) {
+            *data = BinaryStreamUtil::read64BitsNumberStream(stream);
+        } else {
+            BinaryStreamUtil::readStream(stream, (char*)data, literalHeader.getSlotSize() * sizeof(BvSlot));
+        }
+        currentLiteralsSlot += literalHeader.getSlotSizeWithHeader();
+    }
+}
+
 void ClassFile::importHeader(std::istream& stream, ClassHeader& header) {
     header._magicNumber = BinaryStreamUtil::read32BitsNumberStream(stream);
     header._version[0] = BinaryStreamUtil::read16BitsNumberStream(stream);
     header._version[1] = BinaryStreamUtil::read16BitsNumberStream(stream);
     header._literalsSize = BinaryStreamUtil::read32BitsNumberStream(stream);
     header._literals = (BvSlot*) calloc(header._literalsSize, sizeof(BvSlot));
-    BinaryStreamUtil::readStream(stream, (char*) (header._literals), sizeof(BvSlot) * header._literalsSize);
+    this->importLiterals(stream, header);
 
     this->importClassFormat(stream, header._format);
 
@@ -155,7 +173,6 @@ void ClassFile::exportClass(std::ostream& stream) {
     try {
         this->exportHeader(stream, _header);
 
-        _bytecodes = (BvBytecode*) calloc(_header._bytecodeSize, sizeof(BvBytecode));
         BinaryStreamUtil::writeStream(stream, (char*) (_bytecodes), sizeof(BvBytecode) * _header._bytecodeSize);
     } catch (EndOfStreamError const& ex) {
         throw ClassLoadingError("Reached end-of-stream before class was fully loaded.");
@@ -165,49 +182,69 @@ void ClassFile::exportClass(std::ostream& stream) {
 
 }
 
+void ClassFile::exportLiterals(std::ostream& stream, ClassHeader& header) {
+    BvSlot* currentLiteralsSlot = header._literals;
+    while((currentLiteralsSlot - header._literals) < header._literalsSize) {
+        BinaryStreamUtil::write64BitsNumberStream(stream, *currentLiteralsSlot);
+        BvSlot* data = currentLiteralsSlot + 1;
+        ObjectHeader literalHeader(currentLiteralsSlot);
+        if((currentLiteralsSlot - header._literals) + literalHeader.getSlotSizeWithHeader() > header._literalsSize)
+            throw ClassLoadingError("Literals size and headers do not match.");
+        if(!literalHeader.isBytes()) {
+            BinaryStreamUtil::write64BitsNumberStream(stream, *data);
+        } else {
+            BinaryStreamUtil::writeStream(stream, (char*)data, literalHeader.getSlotSize() * sizeof(BvSlot));
+        }
+        currentLiteralsSlot += literalHeader.getSlotSizeWithHeader();
+    }
+}
+
 void ClassFile::exportHeader(std::ostream& stream, ClassHeader& header) {
     BinaryStreamUtil::write32BitsNumberStream(stream, header._magicNumber);
-    VARIABLE_TO_STREAM(stream, header._version);
-    VARIABLE_TO_STREAM(stream, header._literalsSize);
-    BinaryStreamUtil::writeStream(stream, (char*) (header._literals), sizeof(BvSlot) * header._literalsSize);
+    BinaryStreamUtil::write16BitsNumberStream(stream, header._version[0]);
+    BinaryStreamUtil::write16BitsNumberStream(stream, header._version[1]);
+    BinaryStreamUtil::write32BitsNumberStream(stream, header._literalsSize);
+
+    this->exportLiterals(stream, header);
 
     this->exportClassFormat(stream, header._format);
 
-    VARIABLE_TO_STREAM(stream, header._numberOfMethods);
+    BinaryStreamUtil::write16BitsNumberStream(stream, header._numberOfMethods);
     for (MethodFormat* methodFormat = header._methodFormats;
          methodFormat < header._methodFormats + header._numberOfMethods; methodFormat++) {
         this->exportMethodFormat(stream, *methodFormat);
     }
 
-    VARIABLE_TO_STREAM(stream, header._numberOfVariables);
+    BinaryStreamUtil::write16BitsNumberStream(stream, header._numberOfVariables);
     for (VariableFormat* variableFormat = header._variableFormats;
          variableFormat < header._variableFormats + header._numberOfVariables; variableFormat++) {
         this->exportVariableFormat(stream, *variableFormat);
     }
 
-    VARIABLE_TO_STREAM(stream, header._bytecodeSize);
+    BinaryStreamUtil::write32BitsNumberStream(stream, header._bytecodeSize);
 }
 
 void ClassFile::exportClassFormat(std::ostream& stream, ClassFormat& format) {
-    VARIABLE_TO_STREAM(stream, format._name);
-    VARIABLE_TO_STREAM(stream, format._namespace);
-    VARIABLE_TO_STREAM(stream, format._indexable);
-    VARIABLE_TO_STREAM(stream, format._primitive);
-    VARIABLE_TO_STREAM(stream, format._indexedSlotSize);
-    VARIABLE_TO_STREAM(stream, format._type);
+    BinaryStreamUtil::write32BitsNumberStream(stream, format._name);
+    BinaryStreamUtil::write32BitsNumberStream(stream, format._namespace);
+    BinaryStreamUtil::write8BitsNumberStream(stream, format._indexable);
+    BinaryStreamUtil::write8BitsNumberStream(stream, format._primitive);
+    BinaryStreamUtil::write8BitsNumberStream(stream, format._indexedSlotSize);
+    BinaryStreamUtil::write8BitsNumberStream(stream, format._type);
 }
 
 void ClassFile::exportMethodFormat(std::ostream& stream, MethodFormat& format) {
-    VARIABLE_TO_STREAM(stream, format._name);
-    VARIABLE_TO_STREAM(stream, format._returnType);
-    VARIABLE_TO_STREAM(stream, format._numberOfArguments);
+    BinaryStreamUtil::write32BitsNumberStream(stream, format._name);
+    BinaryStreamUtil::write32BitsNumberStream(stream, format._returnType);
+    BinaryStreamUtil::write16BitsNumberStream(stream, format._numberOfArguments);
 
-    BinaryStreamUtil::writeStream(stream, (char*) (format._argumentTypes), sizeof(uint32_t) * format._numberOfArguments);
+    for(uint32_t* arg = format._argumentTypes; arg < format._argumentTypes + format._numberOfArguments; arg++)
+        BinaryStreamUtil::write32BitsNumberStream(stream, *arg);
 }
 
 void ClassFile::exportVariableFormat(std::ostream& stream, VariableFormat& format) {
-    VARIABLE_TO_STREAM(stream, format._name);
-    VARIABLE_TO_STREAM(stream, format._type);
+    BinaryStreamUtil::write32BitsNumberStream(stream, format._name);
+    BinaryStreamUtil::write32BitsNumberStream(stream, format._type);
 }
 
 uint32_t ClassFile::getLiteralsSize() const {

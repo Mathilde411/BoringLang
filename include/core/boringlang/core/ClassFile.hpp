@@ -32,7 +32,8 @@ namespace BoringLang {
 
     struct ClassFormat {
         uint32_t _name; // Index of type CLASS_NAME in literals
-        uint32_t _namespace; // Index of type NAMESPACE in literals
+        uint32_t _namespace; // Index of type NAMESPACE_PATH in literals
+        uint32_t _superclass; // Index of type CLASS_PATH in literals
         uint8_t _indexable;
         uint8_t _primitive;
         uint8_t _indexedSlotSize;
@@ -78,10 +79,12 @@ namespace BoringLang {
         void destroyMethodFormats() const;
         void destroyVariableFormats() const;
         void destroyBytecodes() const;
+        void importLiterals(std::istream& stream, ClassHeader& header);
         void importHeader(std::istream& stream, ClassHeader& header);
         void importClassFormat(std::istream& stream, ClassFormat& format);
         void importMethodFormat(std::istream& stream, MethodFormat& format);
         void importVariableFormat(std::istream& stream, VariableFormat& format);
+        void exportLiterals(std::ostream& stream, ClassHeader& header);
         void exportHeader(std::ostream& stream, ClassHeader& header);
         void exportClassFormat(std::ostream& stream, ClassFormat& format);
         void exportMethodFormat(std::ostream& stream, MethodFormat& format);

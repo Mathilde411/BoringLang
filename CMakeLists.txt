@@ -25,7 +25,7 @@ project(
         LANGUAGES CXX)
 
 
-set(${PROJECT_NAME}_OUTPUT          "${CMAKE_BINARY_DIR}/output/${PROJECT_NAME}")
+set(${PROJECT_NAME}_OUTPUT              "${CMAKE_BINARY_DIR}/output/${PROJECT_NAME}")
 
 IF (WIN32)
     set(${PROJECT_NAME}_LIB_INSTALL     "")

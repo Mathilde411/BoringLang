@@ -25,7 +25,7 @@ TEST_CASE("testBuildFromSlot1", "[testBuildFromSlot1]") {
     BoringLang::ObjectHeader header(&slot);
 
     REQUIRE(header.isPrimitive());
-    REQUIRE_FALSE(header.isSloted());
+    REQUIRE_FALSE(header.isBytes());
     REQUIRE_FALSE(header.isDoubleHeader());
     REQUIRE(header.getFormat() == BoringLang::INT);
     REQUIRE(header.getSize() == 8);
@@ -39,7 +39,7 @@ TEST_CASE("testBuildFromSlot2", "[testBuildFromSlot2]") {
     BoringLang::ObjectHeader header(&slot);
 
     REQUIRE(header.isPrimitive());
-    REQUIRE(header.isSloted());
+    REQUIRE(header.isBytes());
     REQUIRE_FALSE(header.isDoubleHeader());
     REQUIRE(header.getFormat() == BoringLang::STRING);
     REQUIRE(header.getSize() == 42);

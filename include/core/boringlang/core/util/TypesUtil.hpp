@@ -18,6 +18,8 @@
 #define BORINGLANG_TYPESUTIL_HPP
 
 #include <cstdint>
+#include <string>
+#include <stdexcept>
 
 namespace BoringLang {
 
@@ -28,8 +30,8 @@ namespace BoringLang {
     typedef uint8_t BvBytecode;
 
     enum PrimitiveType : uint8_t {
-        //SLOTED
-        NO_TYPE = 0,
+        //Slot-sized
+        VOID = 0,
         INT = 1,
         FLOAT = 2,
         CHAR = 3,
@@ -37,16 +39,17 @@ namespace BoringLang {
         CLASS_HANDLE = 5,
         METHOD_HANDLE = 6,
         VARIABLE_HANDLE = 7,
+        NAMESPACE_HANDLE = 8,
 
-        //UNSLOTED
+        //Bytes array type
         BYTES = 0 | (1 << 6),
-        STRING = 1 | (1 << 6),
-        NAMESPACE = 2 | (1 << 6),
-        CLASS_PATH = 3 | (1 << 6),
-        CLASS_NAME = 4 | (1 << 6),
-        METHOD_NAME = 5 | (1 << 6),
-        VARIABLE_NAME = 6 | (1 << 6),
-        NAMESPACE_HANDLE = 7 | (1 << 6)
+        STRING = (1 << 5) | BYTES,
+        NAMESPACE_PATH = 2 | STRING,
+        CLASS_PATH = 3 | STRING,
+        CLASS_NAME = 4 | STRING,
+        METHOD_NAME = 5 | STRING,
+        VARIABLE_NAME = 6 | STRING,
+
     };
 
     class ObjectHeader {
@@ -63,14 +66,16 @@ namespace BoringLang {
         void loadSizeExtension(const BvSlot* slot);
         void loadObjectHeader(const BvSlot* slot, bool loadSize);
     public:
-        explicit ObjectHeader(BvSlot* header);
+        explicit ObjectHeader(const BvSlot* header);
         ObjectHeader(PrimitiveType format, uint64_t byteSize);
         ObjectHeader(uint64_t byteSize, uint32_t hash, uint32_t classIndex, uint8_t flags);
 
         [[nodiscard]]
         bool isPrimitive() const;
         [[nodiscard]]
-        bool isSloted() const;
+        bool isBytes() const;
+        [[nodiscard]]
+        bool isString() const;
         [[nodiscard]]
         bool isDoubleHeader() const;
         [[nodiscard]]
@@ -91,7 +96,34 @@ namespace BoringLang {
         [[nodiscard]]
         static BvSlot* nextObject(BvSlot* slot);
     };
+
+    class PrimitiveTypeError : public std::runtime_error {
+    public:
+        PrimitiveTypeError():runtime_error("Error when reading stream."){}
+        explicit PrimitiveTypeError(std::string const& msg):runtime_error(msg.c_str()){}
+    };
+
+    class PrimitivesUtil {
+    public:
+        static int64_t getUnslotedInt(const BvSlot* slot);
+        static int64_t getInt(const BvSlot* slot);
+        static void putUnslotedInt(BvSlot* slot, int64_t number);
+        static double getUnslotedFloat(const BvSlot* slot);
+        static double getFloat(const BvSlot* slot);
+        static void putUnslotedFloat(BvSlot* slot, double number);
+        static char getUnslotedChar(const BvSlot* slot);
+        static char getChar(const BvSlot* slot);
+        static void putUnslotedChar(BvSlot* slot, char character);
+        static bool getUnslotedBool(const BvSlot* slot);
+        static bool getBool(const BvSlot* slot);
+        static void putUnslotedBool(BvSlot* slot, bool boolean);
+        static uint64_t getUnslotedBytes(const BvSlot* slot, uint8_t** bytes);
+        static uint64_t copyUnslotedBytes(const BvSlot* slot, uint8_t** bytes);
+        static void putUnslotedBytes(BvSlot* slot, uint8_t* bytes, uint64_t size);
+        static void copyUnslotedString(const BvSlot* slot, std::string& string);
+        static void putUnslotedString(BvSlot* slot, std::string& string);
+        static void putUnslotedString(BvSlot* slot, PrimitiveType format, std::string& string);
+    };
 }
 
-#include "../Class.hpp"
 #endif //BORINGLANG_TYPESUTIL_HPP

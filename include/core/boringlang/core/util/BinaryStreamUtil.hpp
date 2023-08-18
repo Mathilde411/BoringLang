@@ -1,5 +1,4 @@
 
-
 //     BoringLang Project
 //     Copyright (C) 2023  Mathilde Pascal
 //
@@ -35,9 +34,6 @@
 # define ntohll(x) (((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 #endif
 
-#define STREAM_TO_VARIABLE(stream, variable) BinaryStreamUtil::readStream(stream,(char*)(&variable), sizeof(variable))
-#define VARIABLE_TO_STREAM(stream, variable) BinaryStreamUtil::writeStream(stream,(char*)(&variable), sizeof(variable))
-
 namespace BoringLang {
     class BinaryStreamUtil {
     public:
@@ -46,9 +42,6 @@ namespace BoringLang {
 
         static uint64_t read64BitsNumberStream(std::istream& stream);
         static void write64BitsNumberStream(std::ostream& stream, uint64_t number);
-
-        static uint64_t read64BitsFloatStream(std::istream& stream);
-        static void write64BitsFloatStream(std::ostream& stream, float number);
 
         static uint32_t read32BitsNumberStream(std::istream& stream);
         static void write32BitsNumberStream(std::ostream& stream, uint32_t number);
