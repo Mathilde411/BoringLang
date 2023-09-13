@@ -148,6 +148,7 @@ void ClassFile::importHeader(std::istream& stream, ClassHeader& header) {
 void ClassFile::importClassFormat(std::istream& stream, ClassFormat& format) {
     format._name = BinaryStreamUtil::read32BitsNumberStream(stream);
     format._namespace = BinaryStreamUtil::read32BitsNumberStream(stream);
+    format._superclass = BinaryStreamUtil::read32BitsNumberStream(stream);
     format._indexable = BinaryStreamUtil::read8BitsNumberStream(stream);
     format._primitive = BinaryStreamUtil::read8BitsNumberStream(stream);
     format._indexedSlotSize = BinaryStreamUtil::read8BitsNumberStream(stream);
@@ -227,6 +228,7 @@ void ClassFile::exportHeader(std::ostream& stream, ClassHeader& header) {
 void ClassFile::exportClassFormat(std::ostream& stream, ClassFormat& format) {
     BinaryStreamUtil::write32BitsNumberStream(stream, format._name);
     BinaryStreamUtil::write32BitsNumberStream(stream, format._namespace);
+    BinaryStreamUtil::write32BitsNumberStream(stream, format._superclass);
     BinaryStreamUtil::write8BitsNumberStream(stream, format._indexable);
     BinaryStreamUtil::write8BitsNumberStream(stream, format._primitive);
     BinaryStreamUtil::write8BitsNumberStream(stream, format._indexedSlotSize);
@@ -289,6 +291,18 @@ uint32_t ClassFile::getNamespaceIndex() const {
 
 void ClassFile::setNamespaceIndex(uint32_t index) {
     _header._format._namespace = index;
+}
+
+BvSlot* ClassFile::getSuperclass() const {
+    return _header._literals + _header._format._superclass;
+}
+
+uint32_t ClassFile::getSuperclassIndex() const {
+    return _header._format._superclass;
+}
+
+void ClassFile::setSuperclassIndex(uint32_t index) {
+    _header._format._superclass = index;
 }
 
 bool ClassFile::isIndexable() const {

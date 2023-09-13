@@ -123,6 +123,12 @@ namespace BoringLang {
         void setNamespaceIndex(uint32_t index);
 
         [[nodiscard]]
+        BvSlot* getSuperclass() const;
+        [[nodiscard]]
+        uint32_t getSuperclassIndex() const;
+        void setSuperclassIndex(uint32_t index);
+
+        [[nodiscard]]
         bool isIndexable() const;
         void setIndexable(bool indexable);
         [[nodiscard]]

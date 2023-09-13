@@ -16,12 +16,24 @@
 
 #include <fstream>
 #include <cstring>
+#include <iostream>
 #include "boringlang/core/ClassFile.hpp"
 #include "boringlang/core/util/TypesUtil.hpp"
 
 #define strSlotHeadSize(str) ((str.size()/8) + ((str.size() % 8) > 0 ? 1 : 0) + 1)
 
 int main() {
+    BoringLang::ClassFile clazz;
+    std::ifstream myfile;
+    myfile.open("/home/mathilde/Documents/testclass.blx");
+    clazz.importClass(myfile);
+    myfile.close();
+    std::string res;
+    BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getSuperclass(), res);
+    std::cout << res << std::endl;
+}
+
+int main1() {
     BoringLang::ClassFile clazz;
 
     std::string literalStrings[] = {
@@ -39,7 +51,8 @@ int main() {
             "firstVariable", // 11 var1Name
             "secondVariable", // 12 var2Name
             "/Array", // 13 var1Type
-            "/Bool" // 14 var2Type
+            "/Bool", // 14 var2Type
+            "/test/namespace/SuperClass" // 15 superclass
     };
 
     BoringLang::PrimitiveType literalTypes[] = {
@@ -57,10 +70,11 @@ int main() {
             BoringLang::VARIABLE_NAME, // 11 var1Name
             BoringLang::VARIABLE_NAME, // 12 var2Name
             BoringLang::CLASS_PATH, // 13 var1Type
-            BoringLang::CLASS_PATH // 14 var2Type
+            BoringLang::CLASS_PATH, // 14 var2Type
+            BoringLang::CLASS_PATH // 15 superclassPath
     };
 
-    BoringLang::BvSlot* literalPointers[15];
+    BoringLang::BvSlot* literalPointers[16];
 
     uint32_t litSize = 0;
     for( std::string const& literalString : literalStrings)
@@ -68,7 +82,7 @@ int main() {
 
     clazz.setLiteralsSize(litSize);
     BoringLang::BvSlot* litSlot = clazz.getLiterals();
-    for(int i = 0; i < 15; i++) {
+    for(int i = 0; i < 16; i++) {
         literalPointers[i] = litSlot;
         BoringLang::PrimitivesUtil::putUnslotedString(litSlot, literalTypes[i], literalStrings[i]);
         litSlot = BoringLang::ObjectHeader::nextObject(litSlot);
@@ -76,6 +90,7 @@ int main() {
 
     clazz.setClassNameIndex(literalPointers[0] - clazz.getLiterals());
     clazz.setNamespaceIndex(literalPointers[1] - clazz.getLiterals());
+    clazz.setSuperclassIndex(literalPointers[15] - clazz.getLiterals());
 
     clazz.setNumberOfMethods(3);
     clazz.setMethodNameIndex(0, literalPointers[2] - clazz.getLiterals());
@@ -103,7 +118,7 @@ int main() {
 
     std::string testStr;
     std::ofstream myfile;
-    myfile.open ("/home/mathilde/testclass.blx");
+    myfile.open("/home/mathilde/Documents/testclass.blx");
     clazz.exportClass(myfile);
     myfile.close();
 
