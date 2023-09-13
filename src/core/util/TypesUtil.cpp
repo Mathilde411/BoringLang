@@ -46,7 +46,7 @@ ObjectHeader::ObjectHeader(PrimitiveType format, uint64_t byteSize) {
 ObjectHeader::ObjectHeader(uint64_t byteSize, uint32_t hash, uint32_t classIndex, uint8_t flags) {
     _primitive = false;
     _doubleHeader = (byteSize >= 0x7F);
-    _format = PrimitiveType::VOID;
+    _format = VOID_TYPE;
     _size = byteSize;
     _hash = hash;
     _classIndex = classIndex;
@@ -74,7 +74,7 @@ void ObjectHeader::loadSizeExtension(const BvSlot* slot) {
 void ObjectHeader::loadObjectHeader(const BvSlot* slot, bool loadSize) {
     BvSlot value = *slot;
     _primitive = false;
-    _format = PrimitiveType::VOID;
+    _format = VOID_TYPE;
     if(loadSize) {
         _size = (value >> 56) & 0x7F;
         _doubleHeader = false;
@@ -89,11 +89,11 @@ bool ObjectHeader::isPrimitive() const {
 }
 
 bool ObjectHeader::isBytes() const {
-    return _primitive && ((_format & PrimitiveType::BYTES) != 0);
+    return _primitive && ((_format & BYTES_TYPE) != 0);
 }
 
 bool ObjectHeader::isString() const {
-    return _primitive && ((_format & PrimitiveType::STRING) != 0);
+    return _primitive && ((_format & STRING_TYPE) != 0);
 }
 
 bool ObjectHeader::isDoubleHeader() const {
@@ -155,7 +155,7 @@ BvSlot* ObjectHeader::nextObject(BvSlot* slot) {
 
 int64_t PrimitivesUtil::getUnslotedInt(const BvSlot* slot) {
     ObjectHeader header(slot);
-    if (header.getFormat() != PrimitiveType::INT)
+    if (header.getFormat() != INT_TYPE)
         throw PrimitiveTypeError("This object is not an unsloted integer.");
     return getInt(slot + 1);
 }
@@ -165,14 +165,14 @@ int64_t PrimitivesUtil::getInt(const BvSlot* slot) {
 }
 
 void PrimitivesUtil::putUnslotedInt(BvSlot* slot, int64_t number) {
-    ObjectHeader header(PrimitiveType::INT, 8);
+    ObjectHeader header(INT_TYPE, 8);
     header.exportHeader(slot);
     *((int64_t*)(slot + 1)) = number;
 }
 
 double PrimitivesUtil::getUnslotedFloat(const BvSlot* slot) {
     ObjectHeader header(slot);
-    if (header.getFormat() != PrimitiveType::FLOAT)
+    if (header.getFormat() != FLOAT_TYPE)
         throw PrimitiveTypeError("This object is not an unsloted floating-point number.");
     return getFloat(slot + 1);
 }
@@ -182,14 +182,14 @@ double PrimitivesUtil::getFloat(const BvSlot* slot) {
 }
 
 void PrimitivesUtil::putUnslotedFloat(BvSlot* slot, double number) {
-    ObjectHeader header(PrimitiveType::FLOAT, 8);
+    ObjectHeader header(FLOAT_TYPE, 8);
     header.exportHeader(slot);
     *((double*)(slot + 1)) = number;
 }
 
 char PrimitivesUtil::getUnslotedChar(const BvSlot* slot) {
     ObjectHeader header(slot);
-    if (header.getFormat() != PrimitiveType::CHAR)
+    if (header.getFormat() != CHAR_TYPE)
         throw PrimitiveTypeError("This object is not an unsloted character.");
     return getChar(slot + 1);
 }
@@ -199,14 +199,14 @@ char PrimitivesUtil::getChar(const BvSlot* slot) {
 }
 
 void PrimitivesUtil::putUnslotedChar(BvSlot* slot, char character) {
-    ObjectHeader header(PrimitiveType::CHAR, 8);
+    ObjectHeader header(CHAR_TYPE, 8);
     header.exportHeader(slot);
     *((uint64_t*)(slot + 1)) = (unsigned char)(character);
 }
 
 bool PrimitivesUtil::getUnslotedBool(const BvSlot* slot) {
     ObjectHeader header(slot);
-    if (header.getFormat() != PrimitiveType::BOOL)
+    if (header.getFormat() != BOOL_TYPE)
         throw PrimitiveTypeError("This object is not an unsloted boolean.");
     return getBool(slot + 1);
 }
@@ -216,7 +216,7 @@ bool PrimitivesUtil::getBool(const BvSlot* slot) {
 }
 
 void PrimitivesUtil::putUnslotedBool(BvSlot* slot, bool boolean) {
-    ObjectHeader header(PrimitiveType::BOOL, 8);
+    ObjectHeader header(BOOL_TYPE, 8);
     header.exportHeader(slot);
     *((uint64_t*)(slot + 1)) = boolean ? 1:0;
 }
@@ -240,7 +240,7 @@ uint64_t PrimitivesUtil::copyUnslotedBytes(const BvSlot* slot, uint8_t** bytes) 
 }
 
 void PrimitivesUtil::putUnslotedBytes(BvSlot* slot, uint8_t* bytes, uint64_t size) {
-    ObjectHeader header(PrimitiveType::BYTES, size);
+    ObjectHeader header(BYTES_TYPE, size);
     header.exportHeader(slot);
     memcpy((uint8_t*) (slot + 1), bytes, size);
 }
@@ -253,7 +253,7 @@ void PrimitivesUtil::copyUnslotedString(const BvSlot* slot, std::string& string)
 }
 
 void PrimitivesUtil::putUnslotedString(BvSlot* slot, std::string& string) {
-    putUnslotedString(slot, PrimitiveType::STRING, string);
+    putUnslotedString(slot, STRING_TYPE, string);
 }
 
 void PrimitivesUtil::putUnslotedString(BvSlot* slot, PrimitiveType format, std::string& string) {

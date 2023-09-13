@@ -31,24 +31,24 @@ namespace BoringLang {
 
     enum PrimitiveType : uint8_t {
         //Slot-sized
-        VOID = 0,
-        INT = 1,
-        FLOAT = 2,
-        CHAR = 3,
-        BOOL = 4,
-        CLASS_HANDLE = 5,
-        METHOD_HANDLE = 6,
-        VARIABLE_HANDLE = 7,
-        NAMESPACE_HANDLE = 8,
+        VOID_TYPE = 0,
+        INT_TYPE = 1,
+        FLOAT_TYPE = 2,
+        CHAR_TYPE = 3,
+        BOOL_TYPE = 4,
+        CLASS_HANDLE_TYPE = 5,
+        METHOD_HANDLE_TYPE = 6,
+        VARIABLE_HANDLE_TYPE = 7,
+        NAMESPACE_HANDLE_TYPE = 8,
 
         //Bytes array type
-        BYTES = 0 | (1 << 6),
-        STRING = (1 << 5) | BYTES,
-        NAMESPACE_PATH = 2 | STRING,
-        CLASS_PATH = 3 | STRING,
-        CLASS_NAME = 4 | STRING,
-        METHOD_NAME = 5 | STRING,
-        VARIABLE_NAME = 6 | STRING,
+        BYTES_TYPE = 0 | (1 << 6),
+        STRING_TYPE = (1 << 5) | BYTES_TYPE,
+        NAMESPACE_PATH_TYPE = 2 | STRING_TYPE,
+        CLASS_PATH_TYPE = 3 | STRING_TYPE,
+        CLASS_NAME_TYPE = 4 | STRING_TYPE,
+        METHOD_NAME_TYPE = 5 | STRING_TYPE,
+        VARIABLE_NAME_TYPE = 6 | STRING_TYPE,
 
     };
 

@@ -20,28 +20,28 @@
 
 TEST_CASE("testBuildFromSlot1", "[testBuildFromSlot1]") {
     BoringLang::BvSlot slot =
-            (((BoringLang::BvSlot)BoringLang::PrimitiveType::INT) << 56)
+            (((BoringLang::BvSlot)BoringLang::INT_TYPE) << 56)
             | 8;
     BoringLang::ObjectHeader header(&slot);
 
     REQUIRE(header.isPrimitive());
     REQUIRE_FALSE(header.isBytes());
     REQUIRE_FALSE(header.isDoubleHeader());
-    REQUIRE(header.getFormat() == BoringLang::PrimitiveType::INT);
+    REQUIRE(header.getFormat() == BoringLang::INT_TYPE);
     REQUIRE(header.getSize() == 8);
     REQUIRE(header.getSlotSize() == 1);
 }
 
 TEST_CASE("testBuildFromSlot2", "[testBuildFromSlot2]") {
     BoringLang::BvSlot slot =
-            (((BoringLang::BvSlot)BoringLang::PrimitiveType::STRING) << 56)
+            (((BoringLang::BvSlot)BoringLang::STRING_TYPE) << 56)
             | 42;
     BoringLang::ObjectHeader header(&slot);
 
     REQUIRE(header.isPrimitive());
     REQUIRE(header.isBytes());
     REQUIRE_FALSE(header.isDoubleHeader());
-    REQUIRE(header.getFormat() == BoringLang::PrimitiveType::STRING);
+    REQUIRE(header.getFormat() == BoringLang::STRING_TYPE);
     REQUIRE(header.getSize() == 42);
     REQUIRE(header.getSlotSize() == 6);
     REQUIRE(header.getSlotSizeWithHeader() == 7);
@@ -87,11 +87,11 @@ TEST_CASE("testBuildFromSlot4", "[testBuildFromSlot4]") {
 
 TEST_CASE("testBuildFromArgs1", "[testBuildFromArgs1]") {
     BoringLang::BvSlot slot =
-            (((BoringLang::BvSlot)BoringLang::PrimitiveType::INT) << 56)
+            (((BoringLang::BvSlot)BoringLang::INT_TYPE) << 56)
             | 8;
     BoringLang::BvSlot newSlot;
 
-    BoringLang::ObjectHeader header(BoringLang::PrimitiveType::INT, 8);
+    BoringLang::ObjectHeader header(BoringLang::INT_TYPE, 8);
     header.exportHeader(&newSlot);
 
 
@@ -100,11 +100,11 @@ TEST_CASE("testBuildFromArgs1", "[testBuildFromArgs1]") {
 
 TEST_CASE("testBuildFromArgs2", "[testBuildFromArgs2]") {
     BoringLang::BvSlot slot =
-            (((BoringLang::BvSlot)BoringLang::PrimitiveType::STRING) << 56)
+            (((BoringLang::BvSlot)BoringLang::STRING_TYPE) << 56)
             | 42;
     BoringLang::BvSlot newSlot;
 
-    BoringLang::ObjectHeader header(BoringLang::PrimitiveType::STRING, 42);
+    BoringLang::ObjectHeader header(BoringLang::STRING_TYPE, 42);
     header.exportHeader(&newSlot);
 
 

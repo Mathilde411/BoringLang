@@ -31,9 +31,9 @@ namespace BoringLang {
     };
 
     struct ClassFormat {
-        uint32_t _name; // Index of type CLASS_NAME in literals
-        uint32_t _namespace; // Index of type NAMESPACE_PATH in literals
-        uint32_t _superclass; // Index of type CLASS_PATH in literals
+        uint32_t _name; // Index of type CLASS_NAME_TYPE in literals
+        uint32_t _namespace; // Index of type NAMESPACE_PATH_TYPE in literals
+        uint32_t _superclass; // Index of type CLASS_PATH_TYPE in literals
         uint8_t _indexable;
         uint8_t _primitive;
         uint8_t _indexedSlotSize;
@@ -41,15 +41,15 @@ namespace BoringLang {
     };
 
     struct MethodFormat {
-        uint32_t _name; // Index of type METHOD_NAME in literals
-        uint32_t _returnType; // Index of type CLASS_PATH in literals
+        uint32_t _name; // Index of type METHOD_NAME_TYPE in literals
+        uint32_t _returnType; // Index of type CLASS_PATH_TYPE in literals
         uint16_t _numberOfArguments;
-        uint32_t* _argumentTypes; // Indexes of type CLASS_PATH in literals
+        uint32_t* _argumentTypes; // Indexes of type CLASS_PATH_TYPE in literals
     };
 
     struct VariableFormat {
-        uint32_t _name; // Index of type VARIABLE_NAME in literals
-        uint32_t _type; // Index of type CLASS_PATH in literals
+        uint32_t _name; // Index of type VARIABLE_NAME_TYPE in literals
+        uint32_t _type; // Index of type CLASS_PATH_TYPE in literals
     };
 
     struct ClassHeader {

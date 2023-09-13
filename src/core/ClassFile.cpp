@@ -40,7 +40,7 @@ ClassFile::ClassFile() {
                     false,
                     false,
                     8,
-                    PrimitiveType::VOID
+                    VOID_TYPE
             },
             0,
             nullptr,
