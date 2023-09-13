@@ -90,22 +90,22 @@ void fillClassFile(BoringLang::ClassFile& clazz) {
     };
 
     BoringLang::PrimitiveType literalTypes[] = {
-            BoringLang::CLASS_NAME, // 0 className
-            BoringLang::NAMESPACE_PATH, // 1 namespacePath
-            BoringLang::METHOD_NAME, // 2 method1Name
-            BoringLang::METHOD_NAME, // 3 method2Name
-            BoringLang::METHOD_NAME, // 4 method3Name
-            BoringLang::CLASS_PATH, // 5 method1Type
-            BoringLang::CLASS_PATH, // 6 method2Type
-            BoringLang::CLASS_PATH, // 7 method3Type
-            BoringLang::CLASS_PATH, // 8 method2Arg
-            BoringLang::CLASS_PATH, // 9 method3Arg1
-            BoringLang::CLASS_PATH, // 10 method3Arg2
-            BoringLang::VARIABLE_NAME, // 11 var1Name
-            BoringLang::VARIABLE_NAME, // 12 var2Name
-            BoringLang::CLASS_PATH, // 13 var1Type
-            BoringLang::CLASS_PATH, // 14 var2Type
-            BoringLang::CLASS_PATH // 15 superclassPath
+            BoringLang::PrimitiveType::CLASS_NAME, // 0 className
+            BoringLang::PrimitiveType::NAMESPACE_PATH, // 1 namespacePath
+            BoringLang::PrimitiveType::METHOD_NAME, // 2 method1Name
+            BoringLang::PrimitiveType::METHOD_NAME, // 3 method2Name
+            BoringLang::PrimitiveType::METHOD_NAME, // 4 method3Name
+            BoringLang::PrimitiveType::CLASS_PATH, // 5 method1Type
+            BoringLang::PrimitiveType::CLASS_PATH, // 6 method2Type
+            BoringLang::PrimitiveType::CLASS_PATH, // 7 method3Type
+            BoringLang::PrimitiveType::CLASS_PATH, // 8 method2Arg
+            BoringLang::PrimitiveType::CLASS_PATH, // 9 method3Arg1
+            BoringLang::PrimitiveType::CLASS_PATH, // 10 method3Arg2
+            BoringLang::PrimitiveType::VARIABLE_NAME, // 11 var1Name
+            BoringLang::PrimitiveType::VARIABLE_NAME, // 12 var2Name
+            BoringLang::PrimitiveType::CLASS_PATH, // 13 var1Type
+            BoringLang::PrimitiveType::CLASS_PATH, // 14 var2Type
+            BoringLang::PrimitiveType::CLASS_PATH // 15 superclassPath
     };
 
     BoringLang::BvSlot* literalPointers[16];
