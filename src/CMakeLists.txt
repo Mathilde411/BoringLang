@@ -24,6 +24,7 @@ add_library(${${PROJECT_NAME}_CORE_LIB}
         core/NamespacePath.cpp
         core/Method.cpp
         core/ClassFile.cpp
+        core/ClassLoader.cpp
         core/util/BinaryStreamUtil.cpp
         core/util/TypesUtil.cpp)
 target_include_directories(${${PROJECT_NAME}_CORE_LIB} PUBLIC ../include/core)

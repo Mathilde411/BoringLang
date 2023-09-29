@@ -1,5 +1,5 @@
 //     BoringLang Project
-//     Copyright (C) 2023  Mathilde Pascal
+//     Copyright (C) 2023 Mathilde Pascal
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU Lesser General Public License as published by
@@ -14,33 +14,7 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef BORINGLANG_CLASS_HPP
-#define BORINGLANG_CLASS_HPP
+#include "boringlang/core/ClassLoader.hpp"
 
+using namespace BoringLang;
 
-#include "Namespaceable.hpp"
-#include "Method.hpp"
-#include "InstanceVariable.hpp"
-#include "ClassFile.hpp"
-#include "ClassLoader.hpp"
-#include <map>
-
-namespace BoringLang {
-
-    class Class : public Namespaceable {
-    private:
-        bool initialized;
-        bool loaded;
-        ClassLoader* _classLoader;
-        ClassFile* _classFile;
-        BvSlot* _constantPool;
-
-    public:
-        Class(ClassFile* classFile, ClassLoader* classLoader);
-        void init();
-        void load();
-    };
-}
-
-
-#endif //BORINGLANG_CLASS_HPP

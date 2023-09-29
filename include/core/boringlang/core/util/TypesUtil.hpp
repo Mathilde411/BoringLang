@@ -41,6 +41,9 @@ namespace BoringLang {
         VARIABLE_HANDLE_TYPE = 7,
         NAMESPACE_HANDLE_TYPE = 8,
 
+        EMPTY_SPACE = 62,
+        UNAVAILABLE_SPACE = 63,
+
         //Bytes array type
         BYTES_TYPE = 0 | (1 << 6),
         STRING_TYPE = (1 << 5) | BYTES_TYPE,
@@ -72,6 +75,10 @@ namespace BoringLang {
 
         [[nodiscard]]
         bool isPrimitive() const;
+        [[nodiscard]]
+        bool isEmptySpace() const;
+        [[nodiscard]]
+        bool isUnavailableSpace() const;
         [[nodiscard]]
         bool isBytes() const;
         [[nodiscard]]

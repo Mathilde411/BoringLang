@@ -35,8 +35,10 @@ namespace BoringLang {
         ~Namespaceable();
 
         std::string* getName();
+        void setName(std::string const& name);
 
         Namespace* getParent();
+        void setParent(Namespace* parent);
 
         virtual bool isNamespace();
 

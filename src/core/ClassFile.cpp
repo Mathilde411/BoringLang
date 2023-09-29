@@ -16,6 +16,7 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <cstring>
 #include "boringlang/core/ClassFile.hpp"
 #include "boringlang/core/Constants.hpp"
 #include "boringlang/core/util/BinaryStreamUtil.hpp"
@@ -247,6 +248,22 @@ void ClassFile::exportMethodFormat(std::ostream& stream, MethodFormat& format) {
 void ClassFile::exportVariableFormat(std::ostream& stream, VariableFormat& format) {
     BinaryStreamUtil::write32BitsNumberStream(stream, format._name);
     BinaryStreamUtil::write32BitsNumberStream(stream, format._type);
+}
+
+uint32_t ClassFile::getMagicNumber() {
+    return _header._magicNumber;
+}
+
+void ClassFile::setMagicNumber(uint32_t magicNumber) {
+    _header._magicNumber = magicNumber;
+}
+
+uint16_t* ClassFile::getVersion() {
+    return _header._version;
+}
+
+void ClassFile::setVersion(uint16_t* magicNumber) {
+    memcpy(_header._version, magicNumber, 2 * sizeof(uint16_t));
 }
 
 uint32_t ClassFile::getLiteralsSize() const {

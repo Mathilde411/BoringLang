@@ -1,5 +1,3 @@
-
-
 //     BoringLang Project
 //     Copyright (C) 2023  Mathilde Pascal
 //
@@ -102,6 +100,14 @@ namespace BoringLang {
         void destroy() const;
         void importClass(std::istream& stream);
         void exportClass(std::ostream& stream);
+
+        [[nodiscard]]
+        uint32_t getMagicNumber();
+        void setMagicNumber(uint32_t magicNumber);
+
+        [[nodiscard]]
+        uint16_t* getVersion();
+        void setVersion(uint16_t* magicNumber);
 
         [[nodiscard]]
         uint32_t getLiteralsSize() const;

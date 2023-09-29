@@ -88,6 +88,14 @@ bool ObjectHeader::isPrimitive() const {
     return _primitive;
 }
 
+bool ObjectHeader::isEmptySpace() const {
+    return _primitive && (_format == EMPTY_SPACE);
+}
+
+bool ObjectHeader::isUnavailableSpace() const {
+    return _primitive && (_format == UNAVAILABLE_SPACE);
+}
+
 bool ObjectHeader::isBytes() const {
     return _primitive && ((_format & BYTES_TYPE) != 0);
 }

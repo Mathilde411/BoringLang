@@ -29,8 +29,17 @@ std::string* Namespaceable::getName() {
     return _name;
 }
 
+void Namespaceable::setName(const std::string &name) {
+    _name = new std::string(name);
+}
+
 Namespace* Namespaceable::getParent() {
     return _parent;
+}
+
+void Namespaceable::setParent(Namespace *parent) {
+    _parent = parent;
+    _root = parent == nullptr ? nullptr : parent->getRoot();
 }
 
 bool Namespaceable::isNamespace() {
