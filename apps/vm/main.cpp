@@ -22,7 +22,7 @@
 
 #define strSlotHeadSize(str) ((str.size()/8) + ((str.size() % 8) > 0 ? 1 : 0) + 1)
 
-int main() {
+int main1() {
     BoringLang::ClassFile clazz;
     std::ifstream myfile;
     myfile.open("/home/mathilde/Documents/testclass.blx");
@@ -33,7 +33,7 @@ int main() {
     std::cout << res << std::endl;
 }
 
-int main1() {
+int main() {
     BoringLang::ClassFile clazz;
 
     std::string literalStrings[] = {
@@ -74,8 +74,6 @@ int main1() {
             BoringLang::CLASS_PATH_TYPE // 15 superclassPath
     };
 
-    BoringLang::BvSlot* literalPointers[16];
-
     uint32_t litSize = 0;
     for( std::string const& literalString : literalStrings)
         litSize += strSlotHeadSize(literalString);
@@ -83,34 +81,33 @@ int main1() {
     clazz.setLiteralsSize(litSize);
     BoringLang::BvSlot* litSlot = clazz.getLiterals();
     for(int i = 0; i < 16; i++) {
-        literalPointers[i] = litSlot;
         BoringLang::PrimitivesUtil::putUnslotedString(litSlot, literalTypes[i], literalStrings[i]);
         litSlot = BoringLang::ObjectHeader::nextObject(litSlot);
     }
 
-    clazz.setClassNameIndex(literalPointers[0] - clazz.getLiterals());
-    clazz.setNamespaceIndex(literalPointers[1] - clazz.getLiterals());
-    clazz.setSuperclassIndex(literalPointers[15] - clazz.getLiterals());
+    clazz.setClassNameIndex(0);
+    clazz.setNamespaceIndex(1);
+    clazz.setSuperclassIndex(15);
 
     clazz.setNumberOfMethods(3);
-    clazz.setMethodNameIndex(0, literalPointers[2] - clazz.getLiterals());
-    clazz.setMethodNameIndex(1, literalPointers[3] - clazz.getLiterals());
-    clazz.setMethodNameIndex(2, literalPointers[4] - clazz.getLiterals());
-    clazz.setMethodReturnTypeIndex(0, literalPointers[5] - clazz.getLiterals());
-    clazz.setMethodReturnTypeIndex(1, literalPointers[6] - clazz.getLiterals());
-    clazz.setMethodReturnTypeIndex(2, literalPointers[7] - clazz.getLiterals());
+    clazz.setMethodNameIndex(0, 2);
+    clazz.setMethodNameIndex(1, 3);
+    clazz.setMethodNameIndex(2, 4);
+    clazz.setMethodReturnTypeIndex(0, 5);
+    clazz.setMethodReturnTypeIndex(1, 6);
+    clazz.setMethodReturnTypeIndex(2, 7);
     clazz.setMethodNumberOfArguments(0, 0);
     clazz.setMethodNumberOfArguments(1, 1);
     clazz.setMethodNumberOfArguments(2, 2);
-    clazz.setMethodArgumentTypeIndex(1, 0, literalPointers[8] - clazz.getLiterals());
-    clazz.setMethodArgumentTypeIndex(2, 0, literalPointers[9] - clazz.getLiterals());
-    clazz.setMethodArgumentTypeIndex(2, 1, literalPointers[10] - clazz.getLiterals());
+    clazz.setMethodArgumentTypeIndex(1, 0, 8);
+    clazz.setMethodArgumentTypeIndex(2, 0, 9);
+    clazz.setMethodArgumentTypeIndex(2, 1, 10);
 
     clazz.setNumberOfVariables(2);
-    clazz.setVariableNameIndex(0, literalPointers[11] - clazz.getLiterals());
-    clazz.setVariableNameIndex(1, literalPointers[12] - clazz.getLiterals());
-    clazz.setVariableTypeIndex(0, literalPointers[13] - clazz.getLiterals());
-    clazz.setVariableTypeIndex(1, literalPointers[14] - clazz.getLiterals());
+    clazz.setVariableNameIndex(0, 11);
+    clazz.setVariableNameIndex(1, 12);
+    clazz.setVariableTypeIndex(0, 13);
+    clazz.setVariableTypeIndex(1, 14);
 
     BoringLang::BvBytecode bc[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     clazz.setBytecodesSize(16);
@@ -118,7 +115,7 @@ int main1() {
 
     std::string testStr;
     std::ofstream myfile;
-    myfile.open("/home/mathilde/Documents/testclass.blx");
+    myfile.open("/home/pop_os/Documents/testclass.blx");
     clazz.exportClass(myfile);
     myfile.close();
 

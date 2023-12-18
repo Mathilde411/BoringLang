@@ -93,6 +93,7 @@ namespace BoringLang {
         uint32_t* getMethodArgument(MethodFormat* method, uint16_t argumentNumber) const;
         [[nodiscard]]
         VariableFormat* getVariableFormat(uint16_t variableNumber) const;
+        const BvSlot* getLiteral(uint32_t index) const;
 
     public:
         ~ClassFile();
@@ -117,19 +118,19 @@ namespace BoringLang {
         void setLiterals(uint32_t size, BvSlot* literals);
 
         [[nodiscard]]
-        BvSlot* getClassName() const;
+        const BvSlot* getClassName() const;
         [[nodiscard]]
         uint32_t getClassNameIndex() const;
         void setClassNameIndex(uint32_t index);
 
         [[nodiscard]]
-        BvSlot* getNamespace() const;
+        const BvSlot* getNamespace() const;
         [[nodiscard]]
         uint32_t getNamespaceIndex() const;
         void setNamespaceIndex(uint32_t index);
 
         [[nodiscard]]
-        BvSlot* getSuperclass() const;
+        const BvSlot* getSuperclass() const;
         [[nodiscard]]
         uint32_t getSuperclassIndex() const;
         void setSuperclassIndex(uint32_t index);
@@ -152,13 +153,13 @@ namespace BoringLang {
         void setNumberOfMethods(uint16_t number);
 
         [[nodiscard]]
-        BvSlot* getMethodName(uint16_t methodNumber) const;
+        const BvSlot* getMethodName(uint16_t methodNumber) const;
         [[nodiscard]]
         uint32_t getMethodNameIndex(uint16_t methodNumber) const;
         void setMethodNameIndex(uint16_t methodNumber, uint32_t index);
 
         [[nodiscard]]
-        BvSlot* getMethodReturnType(uint16_t methodNumber) const;
+        const BvSlot* getMethodReturnType(uint16_t methodNumber) const;
         [[nodiscard]]
         uint32_t getMethodReturnTypeIndex(uint16_t methodNumber) const;
         void setMethodReturnTypeIndex(uint16_t methodNumber, uint32_t index);
@@ -168,7 +169,7 @@ namespace BoringLang {
         void setMethodNumberOfArguments(uint16_t methodNumber, uint16_t number);
 
         [[nodiscard]]
-        BvSlot* getMethodArgumentType(uint16_t methodNumber, uint16_t argumentNumber) const;
+        const BvSlot* getMethodArgumentType(uint16_t methodNumber, uint16_t argumentNumber) const;
         [[nodiscard]]
         uint32_t getMethodArgumentTypeIndex(uint16_t methodNumber, uint16_t argumentNumber) const;
         void setMethodArgumentTypeIndex(uint16_t methodNumber, uint16_t argumentNumber, uint32_t index);
@@ -178,13 +179,13 @@ namespace BoringLang {
         void setNumberOfVariables(uint16_t number);
 
         [[nodiscard]]
-        BvSlot* getVariableName(uint16_t variableNumber) const;
+        const BvSlot* getVariableName(uint16_t variableNumber) const;
         [[nodiscard]]
         uint32_t getVariableNameIndex(uint16_t variableNumber) const;
         void setVariableNameIndex(uint16_t variableNumber, uint32_t index);
 
         [[nodiscard]]
-        BvSlot* getVariableType(uint16_t variableNumber) const;
+        const BvSlot* getVariableType(uint16_t variableNumber) const;
         [[nodiscard]]
         uint32_t getVariableTypeIndex(uint16_t variableNumber) const;
         void setVariableTypeIndex(uint16_t variableNumber, uint32_t index);

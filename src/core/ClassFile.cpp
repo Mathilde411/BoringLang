@@ -124,6 +124,7 @@ void ClassFile::importHeader(std::istream& stream, ClassHeader& header) {
     header._version[0] = BinaryStreamUtil::read16BitsNumberStream(stream);
     header._version[1] = BinaryStreamUtil::read16BitsNumberStream(stream);
     header._literalsSize = BinaryStreamUtil::read32BitsNumberStream(stream);
+    BinaryStreamUtil::read32BitsNumberStream(stream);
     header._literals = (BvSlot*) calloc(header._literalsSize, sizeof(BvSlot));
     this->importLiterals(stream, header);
 
@@ -206,6 +207,7 @@ void ClassFile::exportHeader(std::ostream& stream, ClassHeader& header) {
     BinaryStreamUtil::write16BitsNumberStream(stream, header._version[0]);
     BinaryStreamUtil::write16BitsNumberStream(stream, header._version[1]);
     BinaryStreamUtil::write32BitsNumberStream(stream, header._literalsSize);
+    BinaryStreamUtil::write32BitsNumberStream(stream, 0);
 
     this->exportLiterals(stream, header);
 
@@ -250,6 +252,14 @@ void ClassFile::exportVariableFormat(std::ostream& stream, VariableFormat& forma
     BinaryStreamUtil::write32BitsNumberStream(stream, format._type);
 }
 
+const BvSlot* ClassFile::getLiteral(uint32_t index) const {
+    BvSlot* slot = _header._literals;
+    for(int i = 0; i < index ; i++) {
+        slot = ObjectHeader::nextObject(slot);
+    }
+    return slot;
+}
+
 uint32_t ClassFile::getMagicNumber() {
     return _header._magicNumber;
 }
@@ -286,8 +296,8 @@ void ClassFile::setLiterals(uint32_t size, BvSlot* literals) {
     _header._literalsSize = size;
 }
 
-BvSlot* ClassFile::getClassName() const {
-    return _header._literals + _header._format._name;
+const BvSlot* ClassFile::getClassName() const {
+    return this->getLiteral(_header._format._name);
 }
 
 uint32_t ClassFile::getClassNameIndex() const {
@@ -298,8 +308,8 @@ void ClassFile::setClassNameIndex(uint32_t index) {
     _header._format._name = index;
 }
 
-BvSlot* ClassFile::getNamespace() const {
-    return _header._literals + _header._format._namespace;
+const BvSlot* ClassFile::getNamespace() const {
+    return this->getLiteral(_header._format._namespace);
 }
 
 uint32_t ClassFile::getNamespaceIndex() const {
@@ -310,8 +320,8 @@ void ClassFile::setNamespaceIndex(uint32_t index) {
     _header._format._namespace = index;
 }
 
-BvSlot* ClassFile::getSuperclass() const {
-    return _header._literals + _header._format._superclass;
+const BvSlot* ClassFile::getSuperclass() const {
+    return this->getLiteral(_header._format._superclass);
 }
 
 uint32_t ClassFile::getSuperclassIndex() const {
@@ -370,9 +380,9 @@ MethodFormat* ClassFile::getMethodFormat(uint16_t methodNumber) const {
     return _header._methodFormats + methodNumber;
 }
 
-BvSlot* ClassFile::getMethodName(uint16_t methodNumber) const {
+const BvSlot* ClassFile::getMethodName(uint16_t methodNumber) const {
     MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return _header._literals + methodFormat->_name;
+    return this->getLiteral(methodFormat->_name);
 }
 
 uint32_t ClassFile::getMethodNameIndex(uint16_t methodNumber) const {
@@ -385,9 +395,9 @@ void ClassFile::setMethodNameIndex(uint16_t methodNumber, uint32_t index) {
     methodFormat->_name = index;
 }
 
-BvSlot* ClassFile::getMethodReturnType(uint16_t methodNumber) const {
+const BvSlot* ClassFile::getMethodReturnType(uint16_t methodNumber) const {
     MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return _header._literals + methodFormat->_returnType;
+    return this->getLiteral(methodFormat->_returnType);
 }
 
 uint32_t ClassFile::getMethodReturnTypeIndex(uint16_t methodNumber) const {
@@ -418,9 +428,9 @@ uint32_t* ClassFile::getMethodArgument(MethodFormat* method, uint16_t argumentNu
     return method->_argumentTypes + argumentNumber;
 }
 
-BvSlot* ClassFile::getMethodArgumentType(uint16_t methodNumber, uint16_t argumentNumber) const {
+const BvSlot* ClassFile::getMethodArgumentType(uint16_t methodNumber, uint16_t argumentNumber) const {
     MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return _header._literals + *this->getMethodArgument(methodFormat, argumentNumber);
+    return this->getLiteral(*this->getMethodArgument(methodFormat, argumentNumber));
 }
 
 uint32_t ClassFile::getMethodArgumentTypeIndex(uint16_t methodNumber, uint16_t argumentNumber) const {
@@ -449,9 +459,9 @@ VariableFormat* ClassFile::getVariableFormat(uint16_t variableNumber) const {
     return _header._variableFormats + variableNumber;
 }
 
-BvSlot* ClassFile::getVariableName(uint16_t variableNumber) const {
+const BvSlot* ClassFile::getVariableName(uint16_t variableNumber) const {
     VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
-    return _header._literals + variableFormat->_name;
+    return this->getLiteral(variableFormat->_name);
 }
 
 uint32_t ClassFile::getVariableNameIndex(uint16_t variableNumber) const {
@@ -464,9 +474,9 @@ void ClassFile::setVariableNameIndex(uint16_t variableNumber, uint32_t index) {
     variableFormat->_name = index;
 }
 
-BvSlot* ClassFile::getVariableType(uint16_t variableNumber) const {
+const BvSlot* ClassFile::getVariableType(uint16_t variableNumber) const {
     VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
-    return _header._literals + variableFormat->_type;
+    return this->getLiteral(variableFormat->_type);
 }
 
 uint32_t ClassFile::getVariableTypeIndex(uint16_t variableNumber) const {

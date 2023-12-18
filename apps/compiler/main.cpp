@@ -19,5 +19,5 @@
 #include <cstdio>
 
 int main() {
-    printf("%d", sizeof(void*));
+    printf("%ld", sizeof(void*));
 }

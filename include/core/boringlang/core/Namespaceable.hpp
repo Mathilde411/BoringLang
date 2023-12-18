@@ -26,13 +26,12 @@ namespace BoringLang {
     class Namespaceable {
     protected:
         Namespace* _parent;
-        std::string* _name;
+        std::string _name;
         Namespace* _root;
 
         Namespaceable(std::string const& name, Namespace* parent);
 
     public:
-        ~Namespaceable();
 
         std::string* getName();
         void setName(std::string const& name);

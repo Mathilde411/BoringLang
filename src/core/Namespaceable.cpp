@@ -21,16 +21,16 @@ using namespace BoringLang;
 
 Namespaceable::Namespaceable(std::string const& name, Namespace* parent) {
     _parent = parent;
-    _name = new std::string(name);
+    _name.assign(name);
     _root = parent == nullptr ? nullptr : parent->getRoot();
 }
 
 std::string* Namespaceable::getName() {
-    return _name;
+    return &_name;
 }
 
 void Namespaceable::setName(const std::string &name) {
-    _name = new std::string(name);
+    _name.assign(name);
 }
 
 Namespace* Namespaceable::getParent() {
@@ -48,10 +48,5 @@ bool Namespaceable::isNamespace() {
 
 Namespace* Namespaceable::getRoot() {
     return _root;
-}
-
-Namespaceable::~Namespaceable() {
-    delete _name;
-    _name = nullptr;
 }
 

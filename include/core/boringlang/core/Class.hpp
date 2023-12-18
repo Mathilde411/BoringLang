@@ -41,5 +41,5 @@ namespace BoringLang {
     };
 }
 
-#include "ClassLoader.hpp"
+
 #endif //BORINGLANG_CLASS_HPP
