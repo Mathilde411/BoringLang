@@ -22,25 +22,24 @@
 #include "Method.hpp"
 #include "InstanceVariable.hpp"
 #include "ClassFile.hpp"
-#include "ClassLoader.hpp"
 #include <map>
 
 namespace BoringLang {
-
+    class ClassLoader;
     class Class : public Namespaceable {
     private:
-        bool initialized;
-        bool loaded;
-        ClassLoader* _classLoader;
-        ClassFile* _classFile;
-        BvSlot* _constantPool;
+        bool initialized{};
+        bool loaded{};
+        ClassLoader* _classLoader{};
+        ClassFile* _classFile{};
+        BvSlot* _constantPool{};
 
     public:
-        Class(ClassFile* classFile, ClassLoader* classLoader);
+        Class(ClassFile* classFile, ClassLoader* classLoader, Namespace* parent, std::string& name);
         void init();
         void load();
     };
 }
 
-
+#include "ClassLoader.hpp"
 #endif //BORINGLANG_CLASS_HPP

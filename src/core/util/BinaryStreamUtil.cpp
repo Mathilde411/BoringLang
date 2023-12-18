@@ -1,5 +1,3 @@
-
-
 //     BoringLang Project
 //     Copyright (C) 2023  Mathilde Pascal
 //

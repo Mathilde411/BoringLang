@@ -73,6 +73,12 @@ endif()
 # FetchContent_MakeAvailable was added in CMake 3.14; simpler usage
 include(FetchContent)
 
+FetchContent_Declare(
+        libarchive
+        GIT_REPOSITORY https://github.com/libarchive/libarchive.git
+        GIT_TAG v3.7.2)
+FetchContent_MakeAvailable(libarchive)
+
 # The compiled library code is here
 add_subdirectory(src)
 
@@ -86,6 +92,11 @@ install(FILES COPYING.md COPYING.LESSER.md
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
         AND BUILD_TESTING)
+    FetchContent_Declare(
+            catch
+            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+            GIT_TAG v3.4.0)
+    FetchContent_MakeAvailable(catch)
     add_subdirectory(tests)
 endif()
 

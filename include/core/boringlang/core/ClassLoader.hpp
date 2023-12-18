@@ -18,17 +18,25 @@
 #define BORINGLANG_CLASSLOADER_HPP
 
 #include "Namespace.hpp"
+#include <stdexcept>
 
 namespace BoringLang {
+    class ClassFile;
+    class Class;
 
     class ClassLoader {
     private:
-        Namespace root;
+        Namespace _root;
+        Class* lazyLoad(ClassFile* classFile);
+        Class* fullLoadLoad(ClassFile* classFile);
     public:
-        static void lazyLoad(ClassFile* classFile);
-        static void fullLoadLoad(ClassFile* classFile);
+        Class* lazyLoad(std::istream& classFile);
+        Class* fullLoadLoad(std::istream& classFile);
+
     };
 
 } // BoringLang
 
+#include "Class.hpp"
+#include "ClassFile.hpp"
 #endif //BORINGLANG_CLASSLOADER_HPP

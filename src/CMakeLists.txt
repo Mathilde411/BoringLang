@@ -14,6 +14,7 @@
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+
 file(GLOB CORE_HEADER_LIST CONFIGURE_DEPENDS "${BoringLang_SOURCE_DIR}/include/core/boringlang/core/*.hpp")
 add_library(${${PROJECT_NAME}_CORE_LIB}
         SHARED
@@ -26,10 +27,12 @@ add_library(${${PROJECT_NAME}_CORE_LIB}
         core/ClassFile.cpp
         core/ClassLoader.cpp
         core/util/BinaryStreamUtil.cpp
-        core/util/TypesUtil.cpp)
+        core/util/TypesUtil.cpp
+)
 target_include_directories(${${PROJECT_NAME}_CORE_LIB} PUBLIC ../include/core)
+target_link_libraries(${${PROJECT_NAME}_CORE_LIB} archive_static)
 if(WIN32)
-    target_link_libraries(${${PROJECT_NAME}_CORE_LIB} wsock32 ws2_32)
+    target_link_libraries(${${PROJECT_NAME}_CORE_LIB} wsock32 ws2_32 )
 endif()
 
 file(GLOB VM_HEADER_LIST CONFIGURE_DEPENDS "${BoringLang_SOURCE_DIR}/include/vm/boringlang/vm/*.hpp")

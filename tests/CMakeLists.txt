@@ -14,12 +14,6 @@
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-FetchContent_Declare(
-        catch
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG v3.4.0)
-FetchContent_MakeAvailable(catch)
-
 add_executable(${${PROJECT_NAME}_CORE_TEST}
         test.cpp
         core/namespaceTests.cpp
