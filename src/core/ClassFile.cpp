@@ -35,6 +35,7 @@ ClassFile::ClassFile() {
             0,
             nullptr,
             {
+                    0,
                     0xFFFFFFFF,
                     0xFFFFFFFF,
                     0xFFFFFFFF,
@@ -148,6 +149,7 @@ void ClassFile::importHeader(std::istream& stream, ClassHeader& header) {
 }
 
 void ClassFile::importClassFormat(std::istream& stream, ClassFormat& format) {
+    format._flags = BinaryStreamUtil::read16BitsNumberStream(stream);
     format._name = BinaryStreamUtil::read32BitsNumberStream(stream);
     format._namespace = BinaryStreamUtil::read32BitsNumberStream(stream);
     format._superclass = BinaryStreamUtil::read32BitsNumberStream(stream);
@@ -158,6 +160,7 @@ void ClassFile::importClassFormat(std::istream& stream, ClassFormat& format) {
 }
 
 void ClassFile::importMethodFormat(std::istream& stream, MethodFormat& format) {
+    format._flags = BinaryStreamUtil::read16BitsNumberStream(stream);
     format._name = BinaryStreamUtil::read32BitsNumberStream(stream);
     format._returnType = BinaryStreamUtil::read32BitsNumberStream(stream);
     format._numberOfArguments = BinaryStreamUtil::read16BitsNumberStream(stream);
@@ -168,6 +171,7 @@ void ClassFile::importMethodFormat(std::istream& stream, MethodFormat& format) {
 }
 
 void ClassFile::importVariableFormat(std::istream& stream, VariableFormat& format) {
+    format._flags = BinaryStreamUtil::read16BitsNumberStream(stream);
     format._name = BinaryStreamUtil::read32BitsNumberStream(stream);
     format._type = BinaryStreamUtil::read32BitsNumberStream(stream);
 }
@@ -229,6 +233,7 @@ void ClassFile::exportHeader(std::ostream& stream, ClassHeader& header) {
 }
 
 void ClassFile::exportClassFormat(std::ostream& stream, ClassFormat& format) {
+    BinaryStreamUtil::write16BitsNumberStream(stream, format._flags);
     BinaryStreamUtil::write32BitsNumberStream(stream, format._name);
     BinaryStreamUtil::write32BitsNumberStream(stream, format._namespace);
     BinaryStreamUtil::write32BitsNumberStream(stream, format._superclass);
@@ -239,6 +244,7 @@ void ClassFile::exportClassFormat(std::ostream& stream, ClassFormat& format) {
 }
 
 void ClassFile::exportMethodFormat(std::ostream& stream, MethodFormat& format) {
+    BinaryStreamUtil::write16BitsNumberStream(stream, format._flags);
     BinaryStreamUtil::write32BitsNumberStream(stream, format._name);
     BinaryStreamUtil::write32BitsNumberStream(stream, format._returnType);
     BinaryStreamUtil::write16BitsNumberStream(stream, format._numberOfArguments);
@@ -248,6 +254,7 @@ void ClassFile::exportMethodFormat(std::ostream& stream, MethodFormat& format) {
 }
 
 void ClassFile::exportVariableFormat(std::ostream& stream, VariableFormat& format) {
+    BinaryStreamUtil::write16BitsNumberStream(stream, format._flags);
     BinaryStreamUtil::write32BitsNumberStream(stream, format._name);
     BinaryStreamUtil::write32BitsNumberStream(stream, format._type);
 }
@@ -294,6 +301,14 @@ void ClassFile::setLiterals(uint32_t size, BvSlot* literals) {
     this->destroyLiterals();
     _header._literals = literals;
     _header._literalsSize = size;
+}
+
+uint16_t ClassFile::getClassFlags() const {
+    return _header._format._flags;
+}
+
+void ClassFile::setClassFlags(uint16_t flags) {
+    _header._format._flags = flags;
 }
 
 const BvSlot* ClassFile::getClassName() const {
@@ -380,6 +395,16 @@ MethodFormat* ClassFile::getMethodFormat(uint16_t methodNumber) const {
     return _header._methodFormats + methodNumber;
 }
 
+uint16_t ClassFile::getMethodFlags(uint16_t methodNumber) const {
+    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
+    return methodFormat->_flags;
+}
+
+void ClassFile::setMethodFlags(uint16_t methodNumber, uint16_t flags) {
+    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
+    methodFormat->_flags = flags;
+}
+
 const BvSlot* ClassFile::getMethodName(uint16_t methodNumber) const {
     MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
     return this->getLiteral(methodFormat->_name);
@@ -457,6 +482,16 @@ VariableFormat* ClassFile::getVariableFormat(uint16_t variableNumber) const {
     if(variableNumber >= _header._numberOfVariables)
         throw std::out_of_range("This variable does not exist.");
     return _header._variableFormats + variableNumber;
+}
+
+uint16_t ClassFile::getVariableFlags(uint16_t variableNumber) const {
+    VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
+    return variableFormat->_flags;
+}
+
+void ClassFile::setVariableFlags(uint16_t variableNumber, uint16_t flags) {
+    VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
+    variableFormat->_flags = flags;
 }
 
 const BvSlot* ClassFile::getVariableName(uint16_t variableNumber) const {

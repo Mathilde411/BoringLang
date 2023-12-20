@@ -88,8 +88,12 @@ int main() {
     clazz.setClassNameIndex(0);
     clazz.setNamespaceIndex(1);
     clazz.setSuperclassIndex(15);
+    clazz.setClassFlags(101);
 
     clazz.setNumberOfMethods(3);
+    clazz.setMethodFlags(0, 202);
+    clazz.setMethodFlags(1, 303);
+    clazz.setMethodFlags(2, 404);
     clazz.setMethodNameIndex(0, 2);
     clazz.setMethodNameIndex(1, 3);
     clazz.setMethodNameIndex(2, 4);
@@ -104,6 +108,8 @@ int main() {
     clazz.setMethodArgumentTypeIndex(2, 1, 10);
 
     clazz.setNumberOfVariables(2);
+    clazz.setVariableFlags(0, 505);
+    clazz.setVariableFlags(1, 606);
     clazz.setVariableNameIndex(0, 11);
     clazz.setVariableNameIndex(1, 12);
     clazz.setVariableTypeIndex(0, 13);
