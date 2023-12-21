@@ -20,6 +20,7 @@
 #include "boringlang/core/util/TypesUtil.hpp"
 #include <cstdlib>
 #include <cstdint>
+#include <vector>
 
 namespace BoringLang {
 
@@ -28,44 +29,114 @@ namespace BoringLang {
         explicit ClassLoadingError(std::string const& msg):runtime_error(msg.c_str()){}
     };
 
+    enum Flags : uint16_t {
+        PUBLIC = 0x0001,
+        PRIVATE = 0x0002,
+        PROTECTED = 0x0004,
+        STATIC = 0x0008,
+        FINAL = 0x0010,
+        ABSTRACT = 0x0020
+    };
+
     enum AttributeType : uint32_t {
-
+        NONE,
+        CONSTANT_VALUE,
+        CODE
     };
 
-    struct Attribute {
-        AttributeType _type;
-        uint32_t _size;
+    class Attribute {
+    public:
+        virtual AttributeType getType() {
+            return NONE;
+        }
+
+        virtual uint32_t getSize() {
+            return 8;
+        }
     };
 
-    struct ClassFormat {
+    class ConstantValueAttribute : public Attribute {
+    private:
+        uint32_t _valueIndex = 0xFFFFFFFF;
+    public:
+        AttributeType getType() override {
+            return CONSTANT_VALUE;
+        }
+
+        uint32_t getSize() override {
+            return 12;
+        }
+
+        [[nodiscard]] uint32_t getValueIndex() const {
+            return _valueIndex;
+        }
+
+        void setValueIndex(uint32_t value_index) {
+            _valueIndex = value_index;
+        }
+    };
+
+    class CodeAttribute : public Attribute {
+        uint32_t _codeStart;
+        uint32_t _codeLength;
+        uint16_t _maxStack;
+    public:
+        AttributeType getType() override {
+            return CODE;
+        }
+
+        uint32_t getSize() override {
+            return 18;
+        }
+
+        [[nodiscard]] uint16_t getMaxStack() const {
+            return _maxStack;
+        }
+
+        void setMaxStack(uint16_t max_stack) {
+            _maxStack = max_stack;
+        }
+
+        [[nodiscard]] uint32_t getCodeStart() const {
+            return _codeStart;
+        }
+
+        void setCodeStart(uint32_t code_start) {
+            _codeStart = code_start;
+        }
+
+        [[nodiscard]] uint32_t getCodeLength() const {
+            return _codeLength;
+        }
+
+        void setCodeLength(uint32_t code_length) {
+            _codeLength = code_length;
+        }
+    };
+
+    struct Format {
         uint16_t _flags;
-        uint32_t _name; // Index of type CLASS_NAME_TYPE in literals
+        uint32_t _name; // Index of type CLASS_NAME_TYPE METHOD_NAME_TYPE or VARIABLE_NAME_TYPE in literals
+        std::vector<Attribute*> _attributes;
+    };
+
+    struct ClassFormat : Format {
         uint32_t _namespace; // Index of type NAMESPACE_PATH_TYPE in literals
         uint32_t _superclass; // Index of type CLASS_PATH_TYPE in literals
         uint8_t _indexable;
         uint8_t _primitive;
         uint8_t _indexedSlotSize;
         PrimitiveType _type;
-        uint32_t _attributesSize;
-        Attribute* _attributes;
     };
 
-    struct MethodFormat {
-        uint16_t _flags;
-        uint32_t _name; // Index of type METHOD_NAME_TYPE in literals
+    struct MethodFormat : Format {
         uint32_t _returnType; // Index of type CLASS_PATH_TYPE in literals
         uint16_t _numberOfArguments;
         uint32_t* _argumentTypes; // Indexes of type CLASS_PATH_TYPE in literals
-        uint32_t _attributesSize;
-        Attribute* _attributes;
     };
 
-    struct VariableFormat {
-        uint16_t _flags;
-        uint32_t _name; // Index of type VARIABLE_NAME_TYPE in literals
+    struct VariableFormat  : Format {
         uint32_t _type; // Index of type CLASS_PATH_TYPE in literals
-        uint32_t _attributesSize;
-        Attribute* _attributes;
     };
 
     struct ClassHeader {
@@ -91,17 +162,20 @@ namespace BoringLang {
         ClassHeader _header{};
         BvBytecode* _bytecodes;
         void destroyLiterals() const;
+        void destroyFormatAttributes(Format* format) const;
         void destroyMethodArgumentTypes(MethodFormat* method) const;
         void destroyMethodFormats() const;
         void destroyVariableFormats() const;
         void destroyBytecodes() const;
         void importLiterals(std::istream& stream, ClassHeader& header);
         void importHeader(std::istream& stream, ClassHeader& header);
+        void importAttributes(std::istream& stream, Format& format);
         void importClassFormat(std::istream& stream, ClassFormat& format);
         void importMethodFormat(std::istream& stream, MethodFormat& format);
         void importVariableFormat(std::istream& stream, VariableFormat& format);
         void exportLiterals(std::ostream& stream, ClassHeader& header);
         void exportHeader(std::ostream& stream, ClassHeader& header);
+        void exportAttributes(std::ostream& stream, Format& format);
         void exportClassFormat(std::ostream& stream, ClassFormat& format);
         void exportMethodFormat(std::ostream& stream, MethodFormat& format);
         void exportVariableFormat(std::ostream& stream, VariableFormat& format);
@@ -111,7 +185,6 @@ namespace BoringLang {
         uint32_t* getMethodArgument(MethodFormat* method, uint16_t argumentNumber) const;
         [[nodiscard]]
         VariableFormat* getVariableFormat(uint16_t variableNumber) const;
-        const BvSlot* getLiteral(uint32_t index) const;
 
     public:
         ~ClassFile();
@@ -134,6 +207,7 @@ namespace BoringLang {
         [[nodiscard]]
         BvSlot* getLiterals() const;
         void setLiterals(uint32_t size, BvSlot* literals);
+        [[nodiscard]] const BvSlot* getLiteral(uint32_t index) const;
 
         [[nodiscard]]
         uint16_t getClassFlags() const;
@@ -169,6 +243,8 @@ namespace BoringLang {
         [[nodiscard]]
         PrimitiveType getPrimitiveType() const;
         void setPrimitiveType(PrimitiveType primitiveType);
+        [[nodiscard]]
+        std::vector<Attribute*>& getClassAttributes();
 
         [[nodiscard]]
         uint16_t getNumberOfMethods() const;
@@ -201,6 +277,9 @@ namespace BoringLang {
         void setMethodArgumentTypeIndex(uint16_t methodNumber, uint16_t argumentNumber, uint32_t index);
 
         [[nodiscard]]
+        std::vector<Attribute*>& getMethodAttributes(uint16_t methodNumber);
+
+        [[nodiscard]]
         uint16_t getNumberOfVariables() const;
         void setNumberOfVariables(uint16_t number);
 
@@ -219,6 +298,9 @@ namespace BoringLang {
         [[nodiscard]]
         uint32_t getVariableTypeIndex(uint16_t variableNumber) const;
         void setVariableTypeIndex(uint16_t variableNumber, uint32_t index);
+
+        [[nodiscard]]
+        std::vector<Attribute*>& getVariableAttributes(uint16_t variableNumber);
 
         [[nodiscard]]
         uint32_t getBytecodesSize() const;

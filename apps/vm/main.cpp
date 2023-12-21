@@ -77,6 +77,7 @@ int main() {
     uint32_t litSize = 0;
     for( std::string const& literalString : literalStrings)
         litSize += strSlotHeadSize(literalString);
+    litSize += 2;
 
     clazz.setLiteralsSize(litSize);
     BoringLang::BvSlot* litSlot = clazz.getLiterals();
@@ -84,6 +85,8 @@ int main() {
         BoringLang::PrimitivesUtil::putUnslotedString(litSlot, literalTypes[i], literalStrings[i]);
         litSlot = BoringLang::ObjectHeader::nextObject(litSlot);
     }
+    BoringLang::PrimitivesUtil::putUnslotedInt(litSlot, 42424242);
+
 
     clazz.setClassNameIndex(0);
     clazz.setNamespaceIndex(1);
@@ -106,6 +109,11 @@ int main() {
     clazz.setMethodArgumentTypeIndex(1, 0, 8);
     clazz.setMethodArgumentTypeIndex(2, 0, 9);
     clazz.setMethodArgumentTypeIndex(2, 1, 10);
+    auto* codeAttr = new BoringLang::CodeAttribute();
+    codeAttr->setMaxStack(10);
+    codeAttr->setCodeStart(0);
+    codeAttr->setCodeLength(16);
+    clazz.getMethodAttributes(1).push_back(codeAttr);
 
     clazz.setNumberOfVariables(2);
     clazz.setVariableFlags(0, 505);
@@ -114,6 +122,9 @@ int main() {
     clazz.setVariableNameIndex(1, 12);
     clazz.setVariableTypeIndex(0, 13);
     clazz.setVariableTypeIndex(1, 14);
+    auto* constAttr = new BoringLang::ConstantValueAttribute();
+    constAttr->setValueIndex(16);
+    clazz.getVariableAttributes(0).push_back(constAttr);
 
     BoringLang::BvBytecode bc[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     clazz.setBytecodesSize(16);
