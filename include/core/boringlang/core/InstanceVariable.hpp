@@ -17,16 +17,10 @@
 #ifndef BORINGLANG_INSTANCEVARIABLE_HPP
 #define BORINGLANG_INSTANCEVARIABLE_HPP
 
-#include <map>
-#include <string>
-#include "boringlang/core/util/TypesUtil.hpp"
 
 namespace BoringLang {
-    class Class;
     class InstanceVariable {
     protected:
     };
 }
-
-#include "Class.hpp"
 #endif //BORINGLANG_INSTANCEVARIABLE_HPP

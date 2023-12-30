@@ -18,7 +18,6 @@
 #define BORINGLANG_CLASSLOADER_HPP
 
 #include "Namespace.hpp"
-#include <stdexcept>
 
 namespace BoringLang {
     class ClassFile;

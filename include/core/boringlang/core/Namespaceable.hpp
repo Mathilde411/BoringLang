@@ -18,7 +18,6 @@
 #define BORINGLANG_NAMESPACEABLE_HPP
 
 #include <string>
-#include <regex>
 
 namespace BoringLang {
     class Namespace;
@@ -32,6 +31,7 @@ namespace BoringLang {
         Namespaceable(std::string const& name, Namespace* parent);
 
     public:
+        virtual ~Namespaceable() = default;
 
         std::string* getName();
         void setName(std::string const& name);
@@ -44,7 +44,5 @@ namespace BoringLang {
         Namespace* getRoot();
     };
 }
-
-#include "Namespace.hpp"
 
 #endif //BORINGLANG_NAMESPACEABLE_HPP

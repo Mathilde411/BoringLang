@@ -18,13 +18,14 @@
 #define BORINGLANG_CLASSFILE_HPP
 
 #include "boringlang/core/util/TypesUtil.hpp"
-#include <cstdlib>
 #include <cstdint>
 #include <vector>
 
+#include "Constants.hpp"
+
 namespace BoringLang {
 
-    class ClassLoadingError : public std::runtime_error {
+    class ClassLoadingError final : public std::runtime_error {
     public:
         explicit ClassLoadingError(std::string const& msg):runtime_error(msg.c_str()){}
     };
@@ -46,178 +47,107 @@ namespace BoringLang {
 
     class Attribute {
     public:
-        virtual AttributeType getType() {
-            return NONE;
-        }
-
-        virtual uint32_t getSize() {
-            return 8;
-        }
+        virtual ~Attribute() = default;
+        virtual AttributeType getType();
+        virtual uint32_t getSize();
     };
 
-    class ConstantValueAttribute : public Attribute {
+    class ConstantValueAttribute final : public Attribute {
     private:
-        uint32_t _valueIndex = 0xFFFFFFFF;
+        uint32_t _valueIndex = BORINGLANG_NO_INDEX;
     public:
-        AttributeType getType() override {
-            return CONSTANT_VALUE;
-        }
+        AttributeType getType() override;
 
-        uint32_t getSize() override {
-            return 12;
-        }
+        uint32_t getSize() override;
 
-        [[nodiscard]] uint32_t getValueIndex() const {
-            return _valueIndex;
-        }
+        [[nodiscard]]
+        uint32_t getValueIndex() const;
 
-        void setValueIndex(uint32_t value_index) {
-            _valueIndex = value_index;
-        }
+        void setValueIndex(uint32_t value_index);
     };
 
-    class CodeAttribute : public Attribute {
-        uint32_t _codeStart;
-        uint32_t _codeLength;
-        uint16_t _maxStack;
+    class CodeAttribute final : public Attribute {
+        uint32_t _codeStart = 0;
+        uint32_t _codeLength = 0;
+        uint16_t _maxStack = 0;
     public:
-        AttributeType getType() override {
-            return CODE;
-        }
+        AttributeType getType() override;
 
-        uint32_t getSize() override {
-            return 18;
-        }
+        uint32_t getSize() override;
 
-        [[nodiscard]] uint16_t getMaxStack() const {
-            return _maxStack;
-        }
+        [[nodiscard]] uint16_t getMaxStack() const;
 
-        void setMaxStack(uint16_t max_stack) {
-            _maxStack = max_stack;
-        }
+        void setMaxStack(uint16_t max_stack);
 
-        [[nodiscard]] uint32_t getCodeStart() const {
-            return _codeStart;
-        }
+        [[nodiscard]] uint32_t getCodeStart() const;
 
-        void setCodeStart(uint32_t code_start) {
-            _codeStart = code_start;
-        }
+        void setCodeStart(uint32_t code_start);
 
-        [[nodiscard]] uint32_t getCodeLength() const {
-            return _codeLength;
-        }
+        [[nodiscard]] uint32_t getCodeLength() const;
 
-        void setCodeLength(uint32_t code_length) {
-            _codeLength = code_length;
-        }
+        void setCodeLength(uint32_t code_length);
     };
 
-    struct Format {
-        uint16_t _flags;
-        uint32_t _name; // Index of type CLASS_NAME_TYPE METHOD_NAME_TYPE or VARIABLE_NAME_TYPE in literals
-        std::vector<Attribute*> _attributes;
+    class Streamed {
+    public:
+        virtual ~Streamed() = default;
+        virtual void destroy() = 0;
+
+        virtual void input(std::istream& stream) = 0;
+        virtual void output(std::ostream& stream) = 0;
     };
 
-    struct ClassFormat : Format {
-        uint32_t _namespace; // Index of type NAMESPACE_PATH_TYPE in literals
-        uint32_t _superclass; // Index of type CLASS_PATH_TYPE in literals
-        uint8_t _indexable;
-        uint8_t _primitive;
-        uint8_t _indexedSlotSize;
-        PrimitiveType _type;
-    };
-
-    struct MethodFormat : Format {
-        uint32_t _returnType; // Index of type CLASS_PATH_TYPE in literals
-        uint16_t _numberOfArguments;
-        uint32_t* _argumentTypes; // Indexes of type CLASS_PATH_TYPE in literals
-    };
-
-    struct VariableFormat  : Format {
-        uint32_t _type; // Index of type CLASS_PATH_TYPE in literals
-    };
-
-    struct ClassHeader {
-        uint32_t _magicNumber;
-        uint16_t _version[2];
-        uint32_t _literalsSize;
-        BvSlot* _literals;
-
-        ClassFormat _format;
-
-        uint16_t _numberOfMethods;
-        MethodFormat* _methodFormats;
-
-        uint16_t _numberOfVariables;
-        VariableFormat* _variableFormats;
-
-        uint32_t _bytecodeSize;
-    };
-
-    class ClassFile {
-
+    class ClassFile;
+    class Attributed : public Streamed {
     protected:
-        ClassHeader _header{};
-        BvBytecode* _bytecodes;
-        void destroyLiterals() const;
-        void destroyFormatAttributes(Format* format) const;
-        void destroyMethodArgumentTypes(MethodFormat* method) const;
-        void destroyMethodFormats() const;
-        void destroyVariableFormats() const;
-        void destroyBytecodes() const;
-        void importLiterals(std::istream& stream, ClassHeader& header);
-        void importHeader(std::istream& stream, ClassHeader& header);
-        void importAttributes(std::istream& stream, Format& format);
-        void importClassFormat(std::istream& stream, ClassFormat& format);
-        void importMethodFormat(std::istream& stream, MethodFormat& format);
-        void importVariableFormat(std::istream& stream, VariableFormat& format);
-        void exportLiterals(std::ostream& stream, ClassHeader& header);
-        void exportHeader(std::ostream& stream, ClassHeader& header);
-        void exportAttributes(std::ostream& stream, Format& format);
-        void exportClassFormat(std::ostream& stream, ClassFormat& format);
-        void exportMethodFormat(std::ostream& stream, MethodFormat& format);
-        void exportVariableFormat(std::ostream& stream, VariableFormat& format);
-        [[nodiscard]]
-        MethodFormat* getMethodFormat(uint16_t methodNumber) const;
-        [[nodiscard]]
-        uint32_t* getMethodArgument(MethodFormat* method, uint16_t argumentNumber) const;
-        [[nodiscard]]
-        VariableFormat* getVariableFormat(uint16_t variableNumber) const;
+        ClassFile* _classFile = nullptr;
+        std::vector<Attribute*> _attributes;
 
     public:
-        ~ClassFile();
-        ClassFile();
-        void destroy() const;
-        void importClass(std::istream& stream);
-        void exportClass(std::ostream& stream);
+        ~Attributed() override;
+        void destroy() override;
+
+        void input(std::istream& stream) override;
+        void output(std::ostream& stream) override;
 
         [[nodiscard]]
-        uint32_t getMagicNumber();
-        void setMagicNumber(uint32_t magicNumber);
+        uint32_t getNumberOfAttributes() const;
+        [[nodiscard]]
+        Attribute* getAttribute(uint32_t attributeNumber) const;
+        void addAttribute(Attribute* attribute);
+        void deleteAttribute(uint32_t attributeNumber);
+        void deleteAttributes();
+        [[nodiscard]]
+        ClassFile* getClassFile() const;
+        void setClassFile(ClassFile* classFile);
+    };
+
+    class ClassFormat : public Attributed {
+    protected:
+        uint16_t _flags = 0;
+        uint32_t _name = BORINGLANG_NO_INDEX; // Index of type CLASS_NAME_TYPE in literals
+        uint32_t _namespace = BORINGLANG_NO_INDEX; // Index of type NAMESPACE_PATH_TYPE in literals
+        uint32_t _superclass = BORINGLANG_NO_INDEX; // Index of type CLASS_PATH_TYPE in literals
+        uint8_t _indexable = 0;
+        uint8_t _primitive = 0;
+        uint8_t _indexedSlotSize = sizeof(BvSlot);
+        PrimitiveType _type = VOID_TYPE;
+
+    public:
+        ~ClassFormat() override;
+
+        void input(std::istream& stream) override;
+        void output(std::ostream& stream) override;
 
         [[nodiscard]]
-        uint16_t* getVersion();
-        void setVersion(uint16_t* magicNumber);
+        uint16_t getFlags() const;
+        void setFlags(uint16_t flags);
 
         [[nodiscard]]
-        uint32_t getLiteralsSize() const;
-        void setLiteralsSize(uint32_t size);
+        const BvSlot* getName() const;
         [[nodiscard]]
-        BvSlot* getLiterals() const;
-        void setLiterals(uint32_t size, BvSlot* literals);
-        [[nodiscard]] const BvSlot* getLiteral(uint32_t index) const;
-
-        [[nodiscard]]
-        uint16_t getClassFlags() const;
-        void setClassFlags(uint16_t flags);
-
-        [[nodiscard]]
-        const BvSlot* getClassName() const;
-        [[nodiscard]]
-        uint32_t getClassNameIndex() const;
-        void setClassNameIndex(uint32_t index);
+        uint32_t getNameIndex() const;
+        void setNameIndex(uint32_t index);
 
         [[nodiscard]]
         const BvSlot* getNamespace() const;
@@ -243,72 +173,152 @@ namespace BoringLang {
         [[nodiscard]]
         PrimitiveType getPrimitiveType() const;
         void setPrimitiveType(PrimitiveType primitiveType);
+
+    };
+
+    class MethodFormat : public Attributed {
+    protected:
+        uint16_t _flags = 0;
+        uint32_t _name = BORINGLANG_NO_INDEX; // Index of type METHOD_NAME_TYPE in literals
+        uint32_t _returnType = BORINGLANG_NO_INDEX; // Index of type CLASS_PATH_TYPE in literals
+
+        std::vector<uint32_t> _argumentTypes; // Indexes of type CLASS_PATH_TYPE in literals
+    public:
+        ~MethodFormat() override;
+        void destroy() override;
+
+        void input(std::istream& stream) override;
+        void output(std::ostream& stream) override;
+
         [[nodiscard]]
-        std::vector<Attribute*>& getClassAttributes();
+        uint16_t getFlags() const;
+        void setFlags(uint16_t flags);
+
+        [[nodiscard]]
+        const BvSlot* getName() const;
+        [[nodiscard]]
+        uint32_t getNameIndex() const;
+        void setNameIndex(uint32_t index);
+
+        [[nodiscard]]
+        const BvSlot* getReturnType() const;
+        [[nodiscard]]
+        uint32_t getReturnTypeIndex() const;
+        void setReturnTypeIndex(uint32_t index);
+
+        [[nodiscard]]
+        uint16_t getNumberOfArguments() const;
+        [[nodiscard]]
+        const BvSlot* getArgumentType(uint16_t argumentNumber) const;
+        [[nodiscard]]
+        uint32_t getArgumentTypeIndex(uint16_t argumentNumber) const;
+        void addArgumentTypeIndex(uint32_t index);
+        void deleteArgumentType(uint16_t argumentNumber);
+        void destroyArgumentTypes();
+    };
+
+    class VariableFormat  : public Attributed {
+    protected:
+        uint16_t _flags = 0;
+        uint32_t _name = BORINGLANG_NO_INDEX; // Index of type VARIABLE_NAME_TYPE in literals
+        uint32_t _type = BORINGLANG_NO_INDEX; // Index of type CLASS_PATH_TYPE in literals
+
+    public:
+        ~VariableFormat() override;
+
+        void input(std::istream& stream) override;
+        void output(std::ostream& stream) override;
+
+        [[nodiscard]]
+        uint16_t getFlags() const;
+        void setFlags(uint16_t flags);
+
+        [[nodiscard]]
+        const BvSlot* getName() const;
+        [[nodiscard]]
+        uint32_t getNameIndex() const;
+        void setNameIndex(uint32_t index);
+
+        [[nodiscard]]
+        const BvSlot* getType() const;
+        [[nodiscard]]
+        uint32_t getTypeIndex() const;
+        void setTypeIndex(uint32_t index);
+    };
+
+    class ClassFile : public Streamed {
+
+    protected:
+        uint32_t _magicNumber = BORINGLANG_MAGIC_NUMBER;
+        uint16_t _version[2] = {BORINGLANG_MAJOR_VERSION, BORINGLANG_MINOR_VERSION};
+        uint32_t _literalsSize = 0;
+        BvSlot* _literals = nullptr;
+
+        ClassFormat _classFormat;
+
+        std::vector<MethodFormat*> _methodFormats;
+
+        std::vector<VariableFormat*> _variableFormats;
+
+        uint32_t _bytecodeSize = 0;
+        BvBytecode* _bytecodes = nullptr;
+
+        void inputLiterals(std::istream& stream);
+        void outputLiterals(std::ostream& stream);
+
+    public:
+        ClassFile();
+        ~ClassFile() override;
+        void destroy() override;
+
+        void input(std::istream& stream) override;
+        void output(std::ostream& stream) override;
+
+        [[nodiscard]]
+        uint32_t getMagicNumber() const;
+        void setMagicNumber(uint32_t magicNumber);
+
+        [[nodiscard]]
+        const uint16_t* getVersion() const;
+        void setVersion(const uint16_t* version);
+
+        [[nodiscard]]
+        uint32_t getLiteralsSize() const;
+        [[nodiscard]]
+        const BvSlot* getLiterals() const;
+        void setLiterals(uint32_t size, const BvSlot* literals);
+        [[nodiscard]]
+        const BvSlot* getLiteral(uint32_t index) const;
+        void deleteLiterals();
+
+        [[nodiscard]]
+        ClassFormat* getClassFormat();
 
         [[nodiscard]]
         uint16_t getNumberOfMethods() const;
-        void setNumberOfMethods(uint16_t number);
-
         [[nodiscard]]
-        uint16_t getMethodFlags(uint16_t methodNumber) const;
-        void setMethodFlags(uint16_t methodNumber, uint16_t flags);
-
-        [[nodiscard]]
-        const BvSlot* getMethodName(uint16_t methodNumber) const;
-        [[nodiscard]]
-        uint32_t getMethodNameIndex(uint16_t methodNumber) const;
-        void setMethodNameIndex(uint16_t methodNumber, uint32_t index);
-
-        [[nodiscard]]
-        const BvSlot* getMethodReturnType(uint16_t methodNumber) const;
-        [[nodiscard]]
-        uint32_t getMethodReturnTypeIndex(uint16_t methodNumber) const;
-        void setMethodReturnTypeIndex(uint16_t methodNumber, uint32_t index);
-
-        [[nodiscard]]
-        uint16_t getMethodNumberOfArguments(uint16_t methodNumber) const;
-        void setMethodNumberOfArguments(uint16_t methodNumber, uint16_t number);
-
-        [[nodiscard]]
-        const BvSlot* getMethodArgumentType(uint16_t methodNumber, uint16_t argumentNumber) const;
-        [[nodiscard]]
-        uint32_t getMethodArgumentTypeIndex(uint16_t methodNumber, uint16_t argumentNumber) const;
-        void setMethodArgumentTypeIndex(uint16_t methodNumber, uint16_t argumentNumber, uint32_t index);
-
-        [[nodiscard]]
-        std::vector<Attribute*>& getMethodAttributes(uint16_t methodNumber);
+        MethodFormat* getMethodFormat(uint16_t methodNumber) const;
+        void addMethodFormat(MethodFormat* method);
+        void deleteMethodFormat(uint16_t methodNumber);
+        void deleteMethodFormats();
 
         [[nodiscard]]
         uint16_t getNumberOfVariables() const;
-        void setNumberOfVariables(uint16_t number);
-
         [[nodiscard]]
-        uint16_t getVariableFlags(uint16_t variableNumber) const;
-        void setVariableFlags(uint16_t variableNumber, uint16_t flags);
-
-        [[nodiscard]]
-        const BvSlot* getVariableName(uint16_t variableNumber) const;
-        [[nodiscard]]
-        uint32_t getVariableNameIndex(uint16_t variableNumber) const;
-        void setVariableNameIndex(uint16_t variableNumber, uint32_t index);
-
-        [[nodiscard]]
-        const BvSlot* getVariableType(uint16_t variableNumber) const;
-        [[nodiscard]]
-        uint32_t getVariableTypeIndex(uint16_t variableNumber) const;
-        void setVariableTypeIndex(uint16_t variableNumber, uint32_t index);
-
-        [[nodiscard]]
-        std::vector<Attribute*>& getVariableAttributes(uint16_t variableNumber);
+        VariableFormat* getVariableFormat(uint16_t variableNumber) const;
+        void addVariableFormat(VariableFormat* variable);
+        void deleteVariableFormat(uint16_t variableNumber);
+        void deleteVariableFormats();
 
         [[nodiscard]]
         uint32_t getBytecodesSize() const;
-        void setBytecodesSize(uint32_t size);
         [[nodiscard]]
-        BvBytecode* getBytecodes() const;
-        void setBytecodes(uint32_t size, BvBytecode* bytecodes);
+        const BvBytecode* getBytecodes() const;
+        void setBytecodes(uint32_t size, const BvBytecode* bytecodes);
+        void deleteBytecodes();
     };
+
+
 
 } // BoringLang
 

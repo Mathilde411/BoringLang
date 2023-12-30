@@ -17,8 +17,6 @@
 #ifndef BORINGLANG_METHOD_HPP
 #define BORINGLANG_METHOD_HPP
 
-#include <map>
-#include <string>
 #include "boringlang/core/util/TypesUtil.hpp"
 
 namespace BoringLang {

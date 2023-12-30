@@ -20,7 +20,7 @@
 
 TEST_CASE("testBuildFromSlot1", "[testBuildFromSlot1]") {
     BoringLang::BvSlot slot =
-            (((BoringLang::BvSlot)BoringLang::INT_TYPE) << 56)
+            (static_cast<BoringLang::BvSlot>(BoringLang::INT_TYPE) << 56)
             | 8;
     BoringLang::ObjectHeader header(&slot);
 
@@ -34,7 +34,7 @@ TEST_CASE("testBuildFromSlot1", "[testBuildFromSlot1]") {
 
 TEST_CASE("testBuildFromSlot2", "[testBuildFromSlot2]") {
     BoringLang::BvSlot slot =
-            (((BoringLang::BvSlot)BoringLang::STRING_TYPE) << 56)
+            (static_cast<BoringLang::BvSlot>(BoringLang::STRING_TYPE) << 56)
             | 42;
     BoringLang::ObjectHeader header(&slot);
 
@@ -48,11 +48,11 @@ TEST_CASE("testBuildFromSlot2", "[testBuildFromSlot2]") {
 }
 
 TEST_CASE("testBuildFromSlot3", "[testBuildFromSlot3]") {
-    BoringLang::BvSlot slot =(1ULL << 63) |
-                             (42ULL << 56) |
-                             (0x012345ULL << 32) |
-                             (0x67ULL << 24) |
-                             (0x89ABCDULL);
+    BoringLang::BvSlot slot = (1ULL << 63) |
+                              (42ULL << 56) |
+                              (0x012345ULL << 32) |
+                              (0x67ULL << 24) |
+                              (0x89ABCDULL);
     BoringLang::ObjectHeader header(&slot);
 
     REQUIRE_FALSE(header.isPrimitive());
@@ -67,11 +67,11 @@ TEST_CASE("testBuildFromSlot3", "[testBuildFromSlot3]") {
 
 TEST_CASE("testBuildFromSlot4", "[testBuildFromSlot4]") {
     BoringLang::BvSlot slot[] = {
-            (0xFFULL << 56) | 99999999,
-            (0xFFULL << 56) |
-            (0x012345ULL << 32) |
-            (0x67ULL << 24) |
-            (0x89ABCDULL)
+        (0xFFULL << 56) | 99999999,
+        (0xFFULL << 56) |
+        (0x012345ULL << 32) |
+        (0x67ULL << 24) |
+        (0x89ABCDULL)
     };
     BoringLang::ObjectHeader header(slot);
 
@@ -87,7 +87,7 @@ TEST_CASE("testBuildFromSlot4", "[testBuildFromSlot4]") {
 
 TEST_CASE("testBuildFromArgs1", "[testBuildFromArgs1]") {
     BoringLang::BvSlot slot =
-            (((BoringLang::BvSlot)BoringLang::INT_TYPE) << 56)
+            (static_cast<BoringLang::BvSlot>(BoringLang::INT_TYPE) << 56)
             | 8;
     BoringLang::BvSlot newSlot;
 
@@ -100,7 +100,7 @@ TEST_CASE("testBuildFromArgs1", "[testBuildFromArgs1]") {
 
 TEST_CASE("testBuildFromArgs2", "[testBuildFromArgs2]") {
     BoringLang::BvSlot slot =
-            (((BoringLang::BvSlot)BoringLang::STRING_TYPE) << 56)
+            (static_cast<BoringLang::BvSlot>(BoringLang::STRING_TYPE) << 56)
             | 42;
     BoringLang::BvSlot newSlot;
 
@@ -112,11 +112,11 @@ TEST_CASE("testBuildFromArgs2", "[testBuildFromArgs2]") {
 }
 
 TEST_CASE("testBuildFromArgs3", "[testBuildFromArgs3]") {
-    BoringLang::BvSlot slot =(1ULL << 63) |
-                             (42ULL << 56) |
-                             (0x012345ULL << 32) |
-                             (0x67ULL << 24) |
-                             (0x89ABCDULL);
+    BoringLang::BvSlot slot = (1ULL << 63) |
+                              (42ULL << 56) |
+                              (0x012345ULL << 32) |
+                              (0x67ULL << 24) |
+                              (0x89ABCDULL);
     BoringLang::BvSlot newSlot;
 
     BoringLang::ObjectHeader header(42, 0x012345, 0x89ABCD, 0x67);
@@ -128,11 +128,11 @@ TEST_CASE("testBuildFromArgs3", "[testBuildFromArgs3]") {
 
 TEST_CASE("testBuildFromArgs4", "[testBuildFromArgs4]") {
     BoringLang::BvSlot slot[] = {
-            (0xFFULL << 56) | 99999999,
-            (0xFFULL << 56) |
-            (0x012345ULL << 32) |
-            (0x67ULL << 24) |
-            (0x89ABCDULL)
+        (0xFFULL << 56) | 99999999,
+        (0xFFULL << 56) |
+        (0x012345ULL << 32) |
+        (0x67ULL << 24) |
+        (0x89ABCDULL)
     };
     BoringLang::BvSlot newSlot[2];
 
@@ -147,10 +147,10 @@ TEST_CASE("testBuildFromArgs4", "[testBuildFromArgs4]") {
 TEST_CASE("testNextObject", "[testNextObject]") {
     BoringLang::BvSlot slot[8];
     slot[0] = (1ULL << 63) |
-    (42ULL << 56) |
-    (0x012345ULL << 32) |
-    (0x67ULL << 24) |
-    (0x89ABCDULL);
+              (42ULL << 56) |
+              (0x012345ULL << 32) |
+              (0x67ULL << 24) |
+              (0x89ABCDULL);
 
     REQUIRE(BoringLang::ObjectHeader::nextObject(slot) == slot + 7);
 }

@@ -41,8 +41,6 @@ namespace BoringLang {
 
         explicit NamespacePath(std::string const& path);
 
-        NamespacePath(NamespacePath const& parent, std::string const& child);
-
         ~NamespacePath();
 
         static bool isNameValid(std::string const& name);
@@ -51,13 +49,13 @@ namespace BoringLang {
 
         std::string getFullyQualified();
 
-        int getDepth() const;
+        [[nodiscard]] int getDepth() const;
 
-        std::string* getComponents() const;
+        [[nodiscard]] std::string* getComponents() const;
 
-        bool isNamespace() const;
+        [[nodiscard]] bool isNamespace() const;
 
-        bool isRooted() const;
+        [[nodiscard]] bool isRooted() const;
     };
 
 } // BoringVM

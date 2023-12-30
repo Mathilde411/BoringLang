@@ -15,14 +15,15 @@
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "boringlang/core/ClassLoader.hpp"
+#include "boringlang/core/NamespacePath.hpp"
 
 using namespace BoringLang;
 
 Class* ClassLoader::lazyLoad(ClassFile* classFile) {
     std::string namespaceString;
-    PrimitivesUtil::copyUnslotedString(classFile->getNamespace(), namespaceString);
+    PrimitivesUtil::copyUnslotedString(classFile->getClassFormat()->getNamespace(), namespaceString);
     std::string className;
-    PrimitivesUtil::copyUnslotedString(classFile->getClassName(), className);
+    PrimitivesUtil::copyUnslotedString(classFile->getClassFormat()->getName(), className);
 
     NamespacePath path(namespaceString);
 
@@ -32,7 +33,7 @@ Class* ClassLoader::lazyLoad(ClassFile* classFile) {
     if(!NamespacePath::isNameValid(className))
         throw ClassLoadingError("Class name is invalid.");
 
-    auto* ns = (Namespace*)_root.findOrCreate(path);
+    auto* ns = dynamic_cast<Namespace*>(_root.findOrCreate(path));
 
     if(ns->find(className) != nullptr)
         throw ClassLoadingError("A class with this name already exists in the same namespace.");
@@ -51,13 +52,12 @@ Class* ClassLoader::fullLoadLoad(ClassFile* classFile) {
 }
 
 Class* ClassLoader::lazyLoad(std::istream& classFile) {
-    ClassFile* file = nullptr;
+    auto* file = new ClassFile();
     Class* clazz = nullptr;
     try {
-        file = new ClassFile();
-        file->importClass(classFile);
+        file->input(classFile);
         clazz = lazyLoad(file);
-    } catch (ClassLoadingError& e) {
+    } catch([[maybe_unused]] ClassLoadingError& e) {
         delete file;
         delete clazz;
         throw;
@@ -66,13 +66,12 @@ Class* ClassLoader::lazyLoad(std::istream& classFile) {
 }
 
 Class* ClassLoader::fullLoadLoad(std::istream& classFile) {
-    ClassFile* file = nullptr;
+    auto* file = new ClassFile();
     Class* clazz = nullptr;
     try {
-        file = new ClassFile();
-        file->importClass(classFile);
+        file->input(classFile);
         clazz = fullLoadLoad(file);
-    } catch (ClassLoadingError& e) {
+    } catch([[maybe_unused]] ClassLoadingError& e) {
         delete file;
         delete clazz;
         throw;

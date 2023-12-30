@@ -17,8 +17,8 @@
 #include "boringlang/core/util/BinaryStreamUtil.hpp"
 using namespace BoringLang;
 
-void BinaryStreamUtil::readStream(std::istream& stream, char* destination, std::streamsize count) {
-    if(!stream.read(destination, count)) {
+void BinaryStreamUtil::readStream(std::istream& stream, void* destination, std::streamsize count) {
+    if(!stream.read(static_cast<std::istream::char_type*>(destination), count)) {
         if(stream.eof())
             throw EndOfStreamError();
         else
@@ -26,51 +26,51 @@ void BinaryStreamUtil::readStream(std::istream& stream, char* destination, std::
     }
 }
 
-void BinaryStreamUtil::writeStream(std::ostream& stream, char* origin, std::streamsize count) {
-    if(!stream.write(origin, count)) {
+void BinaryStreamUtil::writeStream(std::ostream& stream, const void* origin, std::streamsize count) {
+    if(!stream.write(static_cast<const std::ostream::char_type*>(origin), count)) {
         throw StreamError();
     }
 }
 
 uint64_t BinaryStreamUtil::read64BitsNumberStream(std::istream& stream) {
     uint64_t res;
-    BinaryStreamUtil::readStream(stream, (char*)&res, 8);
+    BinaryStreamUtil::readStream(stream, &res, 8);
     return ntohll(res);
 }
 
 void BinaryStreamUtil::write64BitsNumberStream(std::ostream& stream, uint64_t number) {
-    uint64_t res = htonll(number);
-    BinaryStreamUtil::writeStream(stream, (char*)&res, 8);
+    const uint64_t res = htonll(number);
+    BinaryStreamUtil::writeStream(stream, &res, 8);
 }
 
 uint32_t BinaryStreamUtil::read32BitsNumberStream(std::istream& stream) {
     uint32_t res;
-    BinaryStreamUtil::readStream(stream, (char*)&res, 4);
+    BinaryStreamUtil::readStream(stream, &res, 4);
     return ntohl(res);
 }
 
 void BinaryStreamUtil::write32BitsNumberStream(std::ostream& stream, uint32_t number) {
-    uint32_t res = htonl(number);
-    BinaryStreamUtil::writeStream(stream, (char*)&res, 4);
+    const uint32_t res = htonl(number);
+    BinaryStreamUtil::writeStream(stream, &res, 4);
 }
 
 uint16_t BinaryStreamUtil::read16BitsNumberStream(std::istream& stream) {
     uint16_t res;
-    BinaryStreamUtil::readStream(stream, (char*)&res, 2);
+    BinaryStreamUtil::readStream(stream, &res, 2);
     return ntohs(res);
 }
 
 void BinaryStreamUtil::write16BitsNumberStream(std::ostream& stream, uint16_t number) {
-    uint16_t res = htons(number);
-    BinaryStreamUtil::writeStream(stream, (char*)&res, 2);
+    const uint16_t res = htons(number);
+    BinaryStreamUtil::writeStream(stream, &res, 2);
 }
 
 uint8_t BinaryStreamUtil::read8BitsNumberStream(std::istream& stream) {
     uint8_t res;
-    BinaryStreamUtil::readStream(stream, (char*)&res, 1);
+    BinaryStreamUtil::readStream(stream, &res, 1);
     return res;
 }
 
 void BinaryStreamUtil::write8BitsNumberStream(std::ostream& stream, uint8_t number) {
-    BinaryStreamUtil::writeStream(stream, (char*)&number, 1);
+    BinaryStreamUtil::writeStream(stream, &number, 1);
 }

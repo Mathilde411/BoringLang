@@ -49,7 +49,7 @@ namespace BoringLang {
     public:
         Namespace();
 
-        ~Namespace();
+        ~Namespace() override;
 
         void destroy();
 
@@ -71,6 +71,5 @@ namespace BoringLang {
 }
 
 #include "Class.hpp"
-#include "NamespacePath.hpp"
 
 #endif //BORINGLANG_NAMESPACE_HPP

@@ -21,24 +21,22 @@
 
 #define strSlotHeadSize(str) ((str.size()/8) + ((str.size() % 8) > 0 ? 1 : 0) + 1)
 
-class OutMemoryBuffer : public std::basic_streambuf<char>
-{
+class OutMemoryBuffer final : public std::basic_streambuf<char> {
 public:
     OutMemoryBuffer(uint8_t* arr, int size) {
-        this->setp((char*)arr, (char*)(arr + size));
+        this->setp(reinterpret_cast<char*>(arr), reinterpret_cast<char*>(arr + size));
     }
 };
 
-class InMemoryBuffer : public std::basic_streambuf<char>
-{
+class InMemoryBuffer final : public std::basic_streambuf<char> {
 public:
-    InMemoryBuffer(const uint8_t* arr, int size) {
-        this->setg((char*)arr, (char*)arr, (char*)(arr + size));
+    InMemoryBuffer(uint8_t* arr, int size) {
+        this->setg(reinterpret_cast<char*>(arr), reinterpret_cast<char*>(arr), reinterpret_cast<char*>(arr + size));
     }
 };
 
 static const int classFileSize = 532;
-const uint8_t classFile[532] = {
+uint8_t classFile[532] = {
     0xBE, 0x11, 0xEC, 0x1E, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0x00,
     0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0x54, 0x65, 0x73, 0x74, 0x43, 0x6C, 0x61, 0x73,
     0x73, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
@@ -77,97 +75,111 @@ const uint8_t classFile[532] = {
 
 void fillClassFile(BoringLang::ClassFile& clazz) {
     std::string literalStrings[] = {
-            "TestClass", // 0 className
-            "/test/namespace/", // 1 namespacePath
-            "firstMethod", // 2 method1Name
-            "secondMethod", // 3 method2Name
-            "thirdMethod", // 4 method3Name
-            "/Void", // 5 method1Type
-            "/Int", // 6 method2Type
-            "/Float", // 7 method3Type
-            "/Char", // 8 method2Arg
-            "/String", // 9 method3Arg1
-            "/Class", // 10 method3Arg2
-            "firstVariable", // 11 var1Name
-            "secondVariable", // 12 var2Name
-            "/Array", // 13 var1Type
-            "/Bool", // 14 var2Type
-            "/test/namespace/SuperClass" // 15 superclass
+        "TestClass", // 0 className
+        "/test/namespace/", // 1 namespacePath
+        "firstMethod", // 2 method1Name
+        "secondMethod", // 3 method2Name
+        "thirdMethod", // 4 method3Name
+        "/Void", // 5 method1Type
+        "/Int", // 6 method2Type
+        "/Float", // 7 method3Type
+        "/Char", // 8 method2Arg
+        "/String", // 9 method3Arg1
+        "/Class", // 10 method3Arg2
+        "firstVariable", // 11 var1Name
+        "secondVariable", // 12 var2Name
+        "/Array", // 13 var1Type
+        "/Bool", // 14 var2Type
+        "/test/namespace/SuperClass" // 15 superclass
     };
 
     BoringLang::PrimitiveType literalTypes[] = {
-            BoringLang::CLASS_NAME_TYPE, // 0 className
-            BoringLang::NAMESPACE_PATH_TYPE, // 1 namespacePath
-            BoringLang::METHOD_NAME_TYPE, // 2 method1Name
-            BoringLang::METHOD_NAME_TYPE, // 3 method2Name
-            BoringLang::METHOD_NAME_TYPE, // 4 method3Name
-            BoringLang::CLASS_PATH_TYPE, // 5 method1Type
-            BoringLang::CLASS_PATH_TYPE, // 6 method2Type
-            BoringLang::CLASS_PATH_TYPE, // 7 method3Type
-            BoringLang::CLASS_PATH_TYPE, // 8 method2Arg
-            BoringLang::CLASS_PATH_TYPE, // 9 method3Arg1
-            BoringLang::CLASS_PATH_TYPE, // 10 method3Arg2
-            BoringLang::VARIABLE_NAME_TYPE, // 11 var1Name
-            BoringLang::VARIABLE_NAME_TYPE, // 12 var2Name
-            BoringLang::CLASS_PATH_TYPE, // 13 var1Type
-            BoringLang::CLASS_PATH_TYPE, // 14 var2Type
-            BoringLang::CLASS_PATH_TYPE // 15 superclassPath
+        BoringLang::CLASS_NAME_TYPE, // 0 className
+        BoringLang::NAMESPACE_PATH_TYPE, // 1 namespacePath
+        BoringLang::METHOD_NAME_TYPE, // 2 method1Name
+        BoringLang::METHOD_NAME_TYPE, // 3 method2Name
+        BoringLang::METHOD_NAME_TYPE, // 4 method3Name
+        BoringLang::CLASS_PATH_TYPE, // 5 method1Type
+        BoringLang::CLASS_PATH_TYPE, // 6 method2Type
+        BoringLang::CLASS_PATH_TYPE, // 7 method3Type
+        BoringLang::CLASS_PATH_TYPE, // 8 method2Arg
+        BoringLang::CLASS_PATH_TYPE, // 9 method3Arg1
+        BoringLang::CLASS_PATH_TYPE, // 10 method3Arg2
+        BoringLang::VARIABLE_NAME_TYPE, // 11 var1Name
+        BoringLang::VARIABLE_NAME_TYPE, // 12 var2Name
+        BoringLang::CLASS_PATH_TYPE, // 13 var1Type
+        BoringLang::CLASS_PATH_TYPE, // 14 var2Type
+        BoringLang::CLASS_PATH_TYPE // 15 superclassPath
     };
 
     uint32_t litSize = 0;
-    for( std::string const& literalString : literalStrings)
+    for(std::string const& literalString : literalStrings)
         litSize += strSlotHeadSize(literalString);
     litSize += 2;
 
-    clazz.setLiteralsSize(litSize);
-    BoringLang::BvSlot* litSlot = clazz.getLiterals();
+    BoringLang::BvSlot literals[litSize](0);
+    BoringLang::BvSlot* litSlot = literals;
     for(int i = 0; i < 16; i++) {
         BoringLang::PrimitivesUtil::putUnslotedString(litSlot, literalTypes[i], literalStrings[i]);
         litSlot = BoringLang::ObjectHeader::nextObject(litSlot);
     }
     BoringLang::PrimitivesUtil::putUnslotedInt(litSlot, 42424242);
+    clazz.setLiterals(litSize, literals);
 
-    clazz.setClassNameIndex(0);
-    clazz.setNamespaceIndex(1);
-    clazz.setSuperclassIndex(15);
-    clazz.setClassFlags(101);
+    clazz.getClassFormat()->setNameIndex(0);
+    clazz.getClassFormat()->setNamespaceIndex(1);
+    clazz.getClassFormat()->setSuperclassIndex(15);
+    clazz.getClassFormat()->setFlags(101);
 
-    clazz.setNumberOfMethods(3);
-    clazz.setMethodFlags(0, 202);
-    clazz.setMethodFlags(1, 303);
-    clazz.setMethodFlags(2, 404);
-    clazz.setMethodNameIndex(0, 2);
-    clazz.setMethodNameIndex(1, 3);
-    clazz.setMethodNameIndex(2, 4);
-    clazz.setMethodReturnTypeIndex(0, 5);
-    clazz.setMethodReturnTypeIndex(1, 6);
-    clazz.setMethodReturnTypeIndex(2, 7);
-    clazz.setMethodNumberOfArguments(0, 0);
-    clazz.setMethodNumberOfArguments(1, 1);
-    clazz.setMethodNumberOfArguments(2, 2);
-    clazz.setMethodArgumentTypeIndex(1, 0, 8);
-    clazz.setMethodArgumentTypeIndex(2, 0, 9);
-    clazz.setMethodArgumentTypeIndex(2, 1, 10);
+    auto* method1 = new BoringLang::MethodFormat();
+    auto* method2 = new BoringLang::MethodFormat();
+    auto* method3 = new BoringLang::MethodFormat();
+
+    method1->setFlags(202);
+    method2->setFlags(303);
+    method3->setFlags(404);
+
+    method1->setNameIndex(2);
+    method2->setNameIndex(3);
+    method3->setNameIndex(4);
+
+    method1->setReturnTypeIndex(5);
+    method2->setReturnTypeIndex(6);
+    method3->setReturnTypeIndex(7);
+
+    method2->addArgumentTypeIndex(8);
+    method3->addArgumentTypeIndex(9);
+    method3->addArgumentTypeIndex(10);
+
     auto* codeAttr = new BoringLang::CodeAttribute();
     codeAttr->setMaxStack(10);
     codeAttr->setCodeStart(0);
     codeAttr->setCodeLength(16);
-    clazz.getMethodAttributes(1).push_back(codeAttr);
+    method2->addAttribute(codeAttr);
 
-    clazz.setNumberOfVariables(2);
-    clazz.setVariableFlags(0, 505);
-    clazz.setVariableFlags(1, 606);
-    clazz.setVariableNameIndex(0, 11);
-    clazz.setVariableNameIndex(1, 12);
-    clazz.setVariableTypeIndex(0, 13);
-    clazz.setVariableTypeIndex(1, 14);
+    clazz.addMethodFormat(method1);
+    clazz.addMethodFormat(method2);
+    clazz.addMethodFormat(method3);
+
+    auto* variable1 = new BoringLang::VariableFormat();
+    auto* variable2 = new BoringLang::VariableFormat();
+
+    variable1->setFlags(505);
+    variable2->setFlags(606);
+    variable1->setNameIndex(11);
+    variable2->setNameIndex(12);
+    variable1->setTypeIndex(13);
+    variable2->setTypeIndex(14);
+
     auto* constAttr = new BoringLang::ConstantValueAttribute();
     constAttr->setValueIndex(16);
-    clazz.getVariableAttributes(0).push_back(constAttr);
+    variable1->addAttribute(constAttr);
 
-    BoringLang::BvBytecode bc[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    clazz.setBytecodesSize(16);
-    memcpy(clazz.getBytecodes(), bc, 16);
+    clazz.addVariableFormat(variable1);
+    clazz.addVariableFormat(variable2);
+
+    const BoringLang::BvBytecode bc[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    clazz.setBytecodes(16, bc);
 }
 
 TEST_CASE("testExportClassFile", "[testExportClassFile]") {
@@ -177,10 +189,10 @@ TEST_CASE("testExportClassFile", "[testExportClassFile]") {
 
     BoringLang::ClassFile clazz;
     fillClassFile(clazz);
-    clazz.exportClass(out);
+    clazz.output(out);
+
 
     REQUIRE(memcmp(buffer, classFile, classFileSize) == 0);
-
 }
 
 TEST_CASE("testImportClassFile", "[testImportClassFile]") {
@@ -188,103 +200,105 @@ TEST_CASE("testImportClassFile", "[testImportClassFile]") {
     std::istream in(&readBuf);
 
     BoringLang::ClassFile clazz;
-    clazz.importClass(in);
+    clazz.input(in);
 
     BoringLang::ClassFile clazzCompare;
     fillClassFile(clazzCompare);
 
     std::string testStr;
     std::string compareStr;
-    long val = 0;
+    long val;
     REQUIRE_NOTHROW(val = BoringLang::PrimitivesUtil::getUnslotedInt(clazz.getLiteral(16)));
     REQUIRE(val == 42424242);
 
-    REQUIRE(clazz.getClassFlags() == 101);
+    REQUIRE(clazz.getClassFormat()->getFlags() == 101);
 
-    BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getClassName(), testStr);
-    BoringLang::PrimitivesUtil::copyUnslotedString(clazzCompare.getClassName(), compareStr);
+    BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getClassFormat()->getName(), testStr);
+    BoringLang::PrimitivesUtil::copyUnslotedString(clazzCompare.getClassFormat()->getName(), compareStr);
     REQUIRE(testStr == compareStr);
 
-    BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getNamespace(), testStr);
-    BoringLang::PrimitivesUtil::copyUnslotedString(clazzCompare.getNamespace(), compareStr);
+    BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getClassFormat()->getNamespace(), testStr);
+    BoringLang::PrimitivesUtil::copyUnslotedString(clazzCompare.getClassFormat()->getNamespace(), compareStr);
     REQUIRE(testStr == compareStr);
 
-    BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getSuperclass(), testStr);
-    BoringLang::PrimitivesUtil::copyUnslotedString(clazzCompare.getSuperclass(), compareStr);
+    BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getClassFormat()->getSuperclass(), testStr);
+    BoringLang::PrimitivesUtil::copyUnslotedString(clazzCompare.getClassFormat()->getSuperclass(), compareStr);
     REQUIRE(testStr == compareStr);
 
-    REQUIRE_FALSE(clazz.isIndexable() ^ clazzCompare.isIndexable());
-    REQUIRE_FALSE(clazz.isPrimitive() ^ clazzCompare.isPrimitive());
+    REQUIRE_FALSE(clazz.getClassFormat()->isIndexable() ^ clazzCompare.getClassFormat()->isIndexable());
+    REQUIRE_FALSE(clazz.getClassFormat()->isPrimitive() ^ clazzCompare.getClassFormat()->isPrimitive());
 
-    REQUIRE(clazz.getClassAttributes().empty());
+    REQUIRE(clazz.getClassFormat()->getNumberOfAttributes() == 0);
 
     REQUIRE(clazz.getNumberOfMethods() == clazzCompare.getNumberOfMethods());
     for(uint16_t methodNumber = 0; methodNumber < clazz.getNumberOfMethods(); methodNumber++) {
-        REQUIRE(clazz.getMethodFlags(methodNumber) == 202 + 101 * methodNumber);
+        BoringLang::MethodFormat* method = clazz.getMethodFormat(methodNumber);
+        BoringLang::MethodFormat* methodCompare = clazzCompare.getMethodFormat(methodNumber);
+        REQUIRE(method->getFlags() == 202 + 101 * methodNumber);
 
-        BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getMethodName(methodNumber), testStr);
-        BoringLang::PrimitivesUtil::copyUnslotedString(clazzCompare.getMethodName(methodNumber), compareStr);
+        BoringLang::PrimitivesUtil::copyUnslotedString(method->getName(), testStr);
+        BoringLang::PrimitivesUtil::copyUnslotedString(methodCompare->getName(), compareStr);
         REQUIRE(testStr == compareStr);
 
-        BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getMethodReturnType(methodNumber), testStr);
-        BoringLang::PrimitivesUtil::copyUnslotedString(clazzCompare.getMethodReturnType(methodNumber), compareStr);
+        BoringLang::PrimitivesUtil::copyUnslotedString(method->getReturnType(), testStr);
+        BoringLang::PrimitivesUtil::copyUnslotedString(methodCompare->getReturnType(), compareStr);
         REQUIRE(testStr == compareStr);
 
-        REQUIRE(clazz.getMethodNumberOfArguments(methodNumber) == clazzCompare.getMethodNumberOfArguments(methodNumber));
-        for(uint16_t argumentNumber = 0; argumentNumber < clazz.getMethodNumberOfArguments(methodNumber); argumentNumber++) {
-            BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getMethodArgumentType(methodNumber, argumentNumber), testStr);
-            BoringLang::PrimitivesUtil::copyUnslotedString(clazzCompare.getMethodArgumentType(methodNumber, argumentNumber), compareStr);
+        REQUIRE(method->getNumberOfArguments() == methodCompare->getNumberOfArguments());
+        for(uint16_t argumentNumber = 0; argumentNumber < method->getNumberOfArguments();
+            argumentNumber++) {
+            BoringLang::PrimitivesUtil::copyUnslotedString(method->getArgumentType(argumentNumber), testStr);
+            BoringLang::PrimitivesUtil::copyUnslotedString( methodCompare->getArgumentType(argumentNumber), compareStr);
             REQUIRE(testStr == compareStr);
         }
 
         if(methodNumber == 1) {
-            REQUIRE(clazz.getMethodAttributes(methodNumber).size() == 1);
-            if(clazz.getMethodAttributes(methodNumber).size() == 1) {
-                BoringLang::Attribute* attr = clazz.getMethodAttributes(methodNumber).at(0);
+            REQUIRE(method->getNumberOfAttributes() == 1);
+            if(method->getNumberOfAttributes() == 1) {
+                BoringLang::Attribute* attr = method->getAttribute(0);
                 REQUIRE(attr->getType() == BoringLang::CODE);
                 if(attr->getType() == BoringLang::CODE) {
-                    auto* codeAttr = (BoringLang::CodeAttribute*)attr;
+                    auto* codeAttr = dynamic_cast<BoringLang::CodeAttribute*>(attr);
                     REQUIRE(codeAttr->getMaxStack() == 10);
                     REQUIRE(codeAttr->getCodeStart() == 0);
                     REQUIRE(codeAttr->getCodeLength() == 16);
                 }
             }
         } else {
-            REQUIRE(clazz.getMethodAttributes(methodNumber).empty());
+            REQUIRE(clazz.getMethodFormat(methodNumber)->getNumberOfAttributes() == 0);
         }
-
     }
 
     REQUIRE(clazz.getNumberOfVariables() == clazzCompare.getNumberOfVariables());
     for(uint16_t varNumber = 0; varNumber < clazz.getNumberOfVariables(); varNumber++) {
-        REQUIRE(clazz.getVariableFlags(varNumber) == 505 + 101 * varNumber);
+        BoringLang::VariableFormat* variable = clazz.getVariableFormat(varNumber);
+        BoringLang::VariableFormat* variableCompare = clazzCompare.getVariableFormat(varNumber);
 
-        BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getVariableName(varNumber), testStr);
-        BoringLang::PrimitivesUtil::copyUnslotedString(clazzCompare.getVariableName(varNumber), compareStr);
+        REQUIRE(variable->getFlags() == 505 + 101 * varNumber);
+
+        BoringLang::PrimitivesUtil::copyUnslotedString(variable->getName(), testStr);
+        BoringLang::PrimitivesUtil::copyUnslotedString(variableCompare->getName(), compareStr);
         REQUIRE(testStr == compareStr);
 
-        BoringLang::PrimitivesUtil::copyUnslotedString(clazz.getVariableType(varNumber), testStr);
-        BoringLang::PrimitivesUtil::copyUnslotedString(clazzCompare.getVariableType(varNumber), compareStr);
+        BoringLang::PrimitivesUtil::copyUnslotedString(variable->getType(), testStr);
+        BoringLang::PrimitivesUtil::copyUnslotedString(variableCompare->getType(), compareStr);
         REQUIRE(testStr == compareStr);
 
         if(varNumber == 0) {
-            REQUIRE(clazz.getVariableAttributes(varNumber).size() == 1);
-            if(clazz.getVariableAttributes(varNumber).size() == 1) {
-                BoringLang::Attribute* attr = clazz.getVariableAttributes(varNumber).at(0);
+            REQUIRE(variable->getNumberOfAttributes() == 1);
+            if(variable->getNumberOfAttributes() == 1) {
+                BoringLang::Attribute* attr = variable->getAttribute(0);
                 REQUIRE(attr->getType() == BoringLang::CONSTANT_VALUE);
                 if(attr->getType() == BoringLang::CONSTANT_VALUE) {
-                    auto* constAttr = (BoringLang::ConstantValueAttribute*)attr;
+                    auto* constAttr = dynamic_cast<BoringLang::ConstantValueAttribute*>(attr);
                     REQUIRE(constAttr->getValueIndex() == 16);
                 }
             }
         } else {
-            REQUIRE(clazz.getVariableAttributes(varNumber).empty());
+            REQUIRE(variable->getNumberOfAttributes() == 0);
         }
     }
 
     REQUIRE(clazz.getBytecodesSize() == clazzCompare.getBytecodesSize());
     REQUIRE(memcmp(clazz.getBytecodes(), clazzCompare.getBytecodes(), clazz.getBytecodesSize()) == 0);
 }
-
-
-

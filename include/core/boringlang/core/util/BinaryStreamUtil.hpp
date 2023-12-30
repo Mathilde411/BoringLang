@@ -37,8 +37,8 @@
 namespace BoringLang {
     class BinaryStreamUtil {
     public:
-        static void readStream(std::istream& stream, char* destination, std::streamsize count);
-        static void writeStream(std::ostream& stream, char* origin, std::streamsize count);
+        static void readStream(std::istream& stream, void* destination, std::streamsize count);
+        static void writeStream(std::ostream& stream, const void* origin, std::streamsize count);
 
         static uint64_t read64BitsNumberStream(std::istream& stream);
         static void write64BitsNumberStream(std::ostream& stream, uint64_t number);
@@ -59,7 +59,7 @@ namespace BoringLang {
         explicit StreamError(std::string const& msg):runtime_error(msg.c_str()){}
     };
 
-    class EndOfStreamError : public StreamError {
+    class EndOfStreamError final : public StreamError {
     public:
         EndOfStreamError():StreamError("End-of-stream reached before end."){}
         explicit EndOfStreamError(std::string const& msg):StreamError(msg){}

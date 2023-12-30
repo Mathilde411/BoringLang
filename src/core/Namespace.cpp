@@ -19,25 +19,26 @@
 
 using namespace BoringLang;
 
+#include "boringlang/core/NamespacePath.hpp"
 
 Namespace::Namespace() : Namespaceable("", nullptr) {
     _root = this;
 }
 
-Namespace::Namespace(const std::string& name, Namespace* parent) : Namespaceable(name, parent) {}
+Namespace::Namespace(const std::string& name, Namespace* parent) : Namespaceable(name, parent) {
+}
 
 Namespace::~Namespace() {
-    for (Namespace* child: _children) {
+    for(Namespace* child : _children) {
         delete child;
     }
 
-    for (Class* clazz: _classes) {
+    for(Class* clazz : _classes) {
         delete clazz;
     }
 }
 
 void Namespace::removeChild(Namespace* child) {
-
     _indexedChildren.erase(*child->getName());
     _children.erase(child);
 }
@@ -52,22 +53,21 @@ bool Namespace::isNamespace() {
 }
 
 Namespaceable* Namespace::findOrCreate(NamespacePath const& path) {
-
     Namespaceable* returnValue = path.isRooted() ? _root : this;
     int depth = path.getDepth();
 
-    for (int i = 0; i < depth; i++) {
+    for(int i = 0; i < depth; i++) {
         std::string name = path.getComponents()[i];
-        Namespace* ns = ((Namespace*) returnValue);
+        auto* ns = dynamic_cast<Namespace*>(returnValue);
 
-        if (!path.isNamespace() && i == depth - 1) {
-            if (ns->_indexedClasses.count(name) > 0) {
+        if(!path.isNamespace() && i == depth - 1) {
+            if(ns->_indexedClasses.contains(name)) {
                 returnValue = ns->_indexedClasses[name];
             } else {
                 return nullptr;
             }
         } else {
-            if (ns->_indexedChildren.count(name) > 0) {
+            if(ns->_indexedChildren.contains(name)) {
                 returnValue = ns->_indexedChildren[name];
             } else {
                 ns = new Namespace(name, ns);
@@ -76,7 +76,6 @@ Namespaceable* Namespace::findOrCreate(NamespacePath const& path) {
                 returnValue = ns;
             }
         }
-
     }
 
     return returnValue;
@@ -90,18 +89,18 @@ Namespaceable* Namespace::findOrCreate(std::string const& path) {
 Namespaceable* Namespace::find(NamespacePath const& path) {
     Namespaceable* returnValue = path.isRooted() ? _root : this;
     int depth = path.getDepth();
-    for (int i = 0; i < depth; i++) {
+    for(int i = 0; i < depth; i++) {
         std::string name = path.getComponents()[i];
-        Namespace* ns = ((Namespace*) returnValue);
+        auto* ns = dynamic_cast<Namespace*>(returnValue);
 
-        if (!path.isNamespace() && i == depth - 1) {
-            if (ns->_indexedClasses.count(name) > 0) {
+        if(!path.isNamespace() && i == depth - 1) {
+            if(ns->_indexedClasses.contains(name)) {
                 returnValue = ns->_indexedClasses[name];
             } else {
                 return nullptr;
             }
         } else {
-            if (ns->_indexedChildren.count(name) > 0) {
+            if(ns->_indexedChildren.contains(name)) {
                 returnValue = ns->_indexedChildren[name];
             } else {
                 return nullptr;
@@ -118,9 +117,6 @@ Namespaceable* Namespace::find(std::string const& path) {
 }
 
 void Namespace::addClass(Class* clazz) {
-
-
-
 }
 
 bool stringEqualsIgnoreCase(const std::string& a, const std::string& b) {
@@ -132,7 +128,7 @@ bool stringEqualsIgnoreCase(const std::string& a, const std::string& b) {
         return tolower(a) < tolower(b);
     };
 
-    auto res =  std::lexicographical_compare(startA, endA, startB, endB, fun);
+    auto res = std::lexicographical_compare(startA, endA, startB, endB, fun);
 
     return res;
 }

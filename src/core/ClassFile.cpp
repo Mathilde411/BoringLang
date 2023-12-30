@@ -16,178 +16,116 @@
 
 #include <cstring>
 #include "boringlang/core/ClassFile.hpp"
-#include "boringlang/core/Constants.hpp"
+
+#include "boringlang/core/Method.hpp"
 #include "boringlang/core/util/BinaryStreamUtil.hpp"
 
 
 using namespace BoringLang;
 
-ClassFile::~ClassFile() {
-    this->destroy();
+// Class Attribute
+
+AttributeType Attribute::getType() {
+    return NONE;
 }
 
-ClassFile::ClassFile() {
-    _header = {
-        BORINGLANG_MAGIC_NUMBER,
-        {BORINGLANG_MAJOR_VERSION, BORINGLANG_MINOR_VERSION},
-        0,
-        nullptr,
-        {
-            0,
-            0xFFFFFFFF,
-            std::vector<Attribute *>(),
-            0xFFFFFFFF,
-            0xFFFFFFFF,
-            false,
-            false,
-            8,
-            VOID_TYPE
-        },
-        0,
-        nullptr,
-        0,
-        nullptr,
-        0
-    };
-    _bytecodes = nullptr;
+uint32_t Attribute::getSize() {
+    return 8;
 }
 
-void ClassFile::destroyLiterals() const {
-    free(_header._literals);
+
+// Class ConstantValueAttribute
+
+AttributeType ConstantValueAttribute::getType() {
+    return CONSTANT_VALUE;
 }
 
-void ClassFile::destroyFormatAttributes(Format* format) const {
-    for (auto* attr: format->_attributes) {
-        free(attr);
-    }
-    format->_attributes.clear();
+uint32_t ConstantValueAttribute::getSize() {
+    return 12;
 }
 
-void ClassFile::destroyMethodArgumentTypes(MethodFormat* method) const {
-    free(method->_argumentTypes);
+uint32_t ConstantValueAttribute::getValueIndex() const {
+    return _valueIndex;
 }
 
-void ClassFile::destroyMethodFormats() const {
-    if (_header._methodFormats != nullptr) {
-        for (MethodFormat* mFormat = _header._methodFormats;
-             mFormat < _header._methodFormats + _header._numberOfMethods;
-             mFormat++) {
-            this->destroyMethodArgumentTypes(mFormat);
-            this->destroyFormatAttributes(mFormat);
-        }
-    }
-    free(_header._methodFormats);
+void ConstantValueAttribute::setValueIndex(uint32_t value_index) {
+    _valueIndex = value_index;
 }
 
-void ClassFile::destroyVariableFormats() const {
-    if (_header._variableFormats != nullptr) {
-        for (VariableFormat* vFormat = _header._variableFormats;
-             vFormat < _header._variableFormats + _header._numberOfVariables;
-             vFormat++) {
-            this->destroyFormatAttributes(vFormat);
-        }
-    }
-    free(_header._variableFormats);
+
+// Class CodeAttribute
+
+AttributeType CodeAttribute::getType() {
+    return CODE;
 }
 
-void ClassFile::destroyBytecodes() const {
-    free(_bytecodes);
+uint32_t CodeAttribute::getSize() {
+    return 18;
 }
 
-void ClassFile::destroy() const {
-    this->destroyLiterals();
-    this->destroyMethodFormats();
-    this->destroyVariableFormats();
-    this->destroyBytecodes();
+uint16_t CodeAttribute::getMaxStack() const {
+    return _maxStack;
 }
 
-void ClassFile::importClass(std::istream&stream) {
+void CodeAttribute::setMaxStack(uint16_t max_stack) {
+    _maxStack = max_stack;
+}
+
+uint32_t CodeAttribute::getCodeStart() const {
+    return _codeStart;
+}
+
+void CodeAttribute::setCodeStart(uint32_t code_start) {
+    _codeStart = code_start;
+}
+
+uint32_t CodeAttribute::getCodeLength() const {
+    return _codeLength;
+}
+
+void CodeAttribute::setCodeLength(uint32_t code_length) {
+    _codeLength = code_length;
+}
+
+
+// Class Attributed
+
+Attributed::~Attributed() {
+    this->deleteAttributes();
+}
+
+void Attributed::destroy() {
+    this->deleteAttributes();
+}
+
+void Attributed::input(std::istream& stream) {
     this->destroy();
 
-    try {
-        this->importHeader(stream, _header);
-
-        _bytecodes = (BvBytecode *)calloc(_header._bytecodeSize, sizeof(BvBytecode));
-        BinaryStreamUtil::readStream(stream, (char *)(_bytecodes), sizeof(BvBytecode) * _header._bytecodeSize);
-    }
-    catch (EndOfStreamError const&ex) {
-        throw ClassLoadingError("Reached end-of-stream before class was fully loaded.");
-    } catch (StreamError const&ex) {
-        throw ClassLoadingError("Reading error was encountered while loading class.");
-    }
-}
-
-void ClassFile::importLiterals(std::istream&stream, ClassHeader&header) {
-    BvSlot* currentLiteralsSlot = header._literals;
-    while ((currentLiteralsSlot - header._literals) < header._literalsSize) {
-        *currentLiteralsSlot = BinaryStreamUtil::read64BitsNumberStream(stream);
-        BvSlot* data = currentLiteralsSlot + 1;
-        ObjectHeader literalHeader(currentLiteralsSlot);
-        if ((currentLiteralsSlot - header._literals) + literalHeader.getSlotSizeWithHeader() > header._literalsSize)
-            throw ClassLoadingError("Literals size and headers do not match.");
-        if (!literalHeader.isBytes()) {
-            *data = BinaryStreamUtil::read64BitsNumberStream(stream);
-        }
-        else {
-            BinaryStreamUtil::readStream(stream, (char *)data, literalHeader.getSlotSize() * sizeof(BvSlot));
-        }
-        currentLiteralsSlot += literalHeader.getSlotSizeWithHeader();
-    }
-}
-
-void ClassFile::importHeader(std::istream&stream, ClassHeader&header) {
-    header._magicNumber = BinaryStreamUtil::read32BitsNumberStream(stream);
-    header._version[0] = BinaryStreamUtil::read16BitsNumberStream(stream);
-    header._version[1] = BinaryStreamUtil::read16BitsNumberStream(stream);
-    header._literalsSize = BinaryStreamUtil::read32BitsNumberStream(stream);
-    BinaryStreamUtil::read32BitsNumberStream(stream);
-    header._literals = (BvSlot *)calloc(header._literalsSize, sizeof(BvSlot));
-    this->importLiterals(stream, header);
-
-    this->importClassFormat(stream, header._format);
-
-    header._numberOfMethods = BinaryStreamUtil::read16BitsNumberStream(stream);
-    header._methodFormats = (MethodFormat *)calloc(header._numberOfMethods, sizeof(MethodFormat));
-    for (MethodFormat* methodFormat = header._methodFormats;
-         methodFormat < header._methodFormats + header._numberOfMethods; methodFormat++) {
-        this->importMethodFormat(stream, *methodFormat);
-    }
-
-    header._numberOfVariables = BinaryStreamUtil::read16BitsNumberStream(stream);
-    header._variableFormats = (VariableFormat *)calloc(header._numberOfVariables, sizeof(VariableFormat));
-    for (VariableFormat* variableFormat = header._variableFormats;
-         variableFormat < header._variableFormats + header._numberOfVariables; variableFormat++) {
-        this->importVariableFormat(stream, *variableFormat);
-    }
-
-    header._bytecodeSize = BinaryStreamUtil::read32BitsNumberStream(stream);
-}
-
-void ClassFile::importAttributes(std::istream&stream, Format&format) {
-    uint32_t attrsSize = BinaryStreamUtil::read32BitsNumberStream(stream);
+    const uint32_t attrsSize = BinaryStreamUtil::read32BitsNumberStream(stream);
     uint32_t attr = 0;
-    while (attr < attrsSize) {
-        if (attr + 8 > attrsSize)
+    while(attr < attrsSize) {
+        if(attr + 8 > attrsSize)
             throw ClassLoadingError("Attributes sizes do not match.");
 
-        AttributeType type = (AttributeType)BinaryStreamUtil::read32BitsNumberStream(stream);
-        uint32_t size = BinaryStreamUtil::read32BitsNumberStream(stream);
+        const auto type = static_cast<AttributeType>(BinaryStreamUtil::read32BitsNumberStream(stream));
+        const uint32_t size = BinaryStreamUtil::read32BitsNumberStream(stream);
 
-        if (attr + size > attrsSize)
+        if(attr + size > attrsSize)
             throw ClassLoadingError("Attributes sizes do not match.");
 
         Attribute* vctAttr;
-        switch (type) {
+        switch(type) {
             case CONSTANT_VALUE: {
                 vctAttr = new ConstantValueAttribute();
-                ((ConstantValueAttribute*)vctAttr)->setValueIndex(BinaryStreamUtil::read32BitsNumberStream(stream));
+                dynamic_cast<ConstantValueAttribute*>(vctAttr)->setValueIndex(
+                    BinaryStreamUtil::read32BitsNumberStream(stream));
                 break;
             }
             case CODE: {
                 vctAttr = new CodeAttribute();
-                ((CodeAttribute*)vctAttr)->setCodeStart(BinaryStreamUtil::read32BitsNumberStream(stream));
-                ((CodeAttribute*)vctAttr)->setCodeLength(BinaryStreamUtil::read32BitsNumberStream(stream));
-                ((CodeAttribute*)vctAttr)->setMaxStack(BinaryStreamUtil::read16BitsNumberStream(stream));
+                dynamic_cast<CodeAttribute*>(vctAttr)->setCodeStart(BinaryStreamUtil::read32BitsNumberStream(stream));
+                dynamic_cast<CodeAttribute*>(vctAttr)->setCodeLength(BinaryStreamUtil::read32BitsNumberStream(stream));
+                dynamic_cast<CodeAttribute*>(vctAttr)->setMaxStack(BinaryStreamUtil::read16BitsNumberStream(stream));
                 break;
             }
             default: {
@@ -195,467 +133,592 @@ void ClassFile::importAttributes(std::istream&stream, Format&format) {
             }
         }
 
-        format._attributes.push_back(vctAttr);
+        _attributes.push_back(vctAttr);
         attr += size;
     }
 }
 
-void ClassFile::importClassFormat(std::istream&stream, ClassFormat&format) {
-    format._flags = BinaryStreamUtil::read16BitsNumberStream(stream);
-    format._name = BinaryStreamUtil::read32BitsNumberStream(stream);
-    format._namespace = BinaryStreamUtil::read32BitsNumberStream(stream);
-    format._superclass = BinaryStreamUtil::read32BitsNumberStream(stream);
-    format._indexable = BinaryStreamUtil::read8BitsNumberStream(stream);
-    format._primitive = BinaryStreamUtil::read8BitsNumberStream(stream);
-    format._indexedSlotSize = BinaryStreamUtil::read8BitsNumberStream(stream);
-    format._type = (PrimitiveType)BinaryStreamUtil::read8BitsNumberStream(stream);
-
-    this->importAttributes(stream, format);
-}
-
-void ClassFile::importMethodFormat(std::istream&stream, MethodFormat&format) {
-    format._flags = BinaryStreamUtil::read16BitsNumberStream(stream);
-    format._name = BinaryStreamUtil::read32BitsNumberStream(stream);
-    format._returnType = BinaryStreamUtil::read32BitsNumberStream(stream);
-    format._numberOfArguments = BinaryStreamUtil::read16BitsNumberStream(stream);
-
-    format._argumentTypes = (uint32_t *)calloc(format._numberOfArguments, sizeof(uint32_t));
-    for (uint32_t* arg = format._argumentTypes; arg < format._argumentTypes + format._numberOfArguments; arg++)
-        *arg = BinaryStreamUtil::read32BitsNumberStream(stream);
-
-    this->importAttributes(stream, format);
-}
-
-void ClassFile::importVariableFormat(std::istream&stream, VariableFormat&format) {
-    format._flags = BinaryStreamUtil::read16BitsNumberStream(stream);
-    format._name = BinaryStreamUtil::read32BitsNumberStream(stream);
-    format._type = BinaryStreamUtil::read32BitsNumberStream(stream);
-
-    this->importAttributes(stream, format);
-}
-
-void ClassFile::exportClass(std::ostream&stream) {
-    try {
-        this->exportHeader(stream, _header);
-
-        BinaryStreamUtil::writeStream(stream, (char *)(_bytecodes), sizeof(BvBytecode) * _header._bytecodeSize);
-    }
-    catch (EndOfStreamError const&ex) {
-        throw ClassLoadingError("Reached end-of-stream before class was fully loaded.");
-    } catch (StreamError const&ex) {
-        throw ClassLoadingError("Reading error was encountered while loading class.");
-    }
-}
-
-void ClassFile::exportLiterals(std::ostream&stream, ClassHeader&header) {
-    BvSlot* currentLiteralsSlot = header._literals;
-    while ((currentLiteralsSlot - header._literals) < header._literalsSize) {
-        BinaryStreamUtil::write64BitsNumberStream(stream, *currentLiteralsSlot);
-        BvSlot* data = currentLiteralsSlot + 1;
-        ObjectHeader literalHeader(currentLiteralsSlot);
-        if ((currentLiteralsSlot - header._literals) + literalHeader.getSlotSizeWithHeader() > header._literalsSize)
-            throw ClassLoadingError("Literals size and headers do not match.");
-        if (!literalHeader.isBytes()) {
-            BinaryStreamUtil::write64BitsNumberStream(stream, *data);
-        }
-        else {
-            BinaryStreamUtil::writeStream(stream, (char *)data, literalHeader.getSlotSize() * sizeof(BvSlot));
-        }
-        currentLiteralsSlot += literalHeader.getSlotSizeWithHeader();
-    }
-}
-
-void ClassFile::exportHeader(std::ostream&stream, ClassHeader&header) {
-    BinaryStreamUtil::write32BitsNumberStream(stream, header._magicNumber);
-    BinaryStreamUtil::write16BitsNumberStream(stream, header._version[0]);
-    BinaryStreamUtil::write16BitsNumberStream(stream, header._version[1]);
-    BinaryStreamUtil::write32BitsNumberStream(stream, header._literalsSize);
-    BinaryStreamUtil::write32BitsNumberStream(stream, 0);
-
-    this->exportLiterals(stream, header);
-
-    this->exportClassFormat(stream, header._format);
-
-    BinaryStreamUtil::write16BitsNumberStream(stream, header._numberOfMethods);
-    for (MethodFormat* methodFormat = header._methodFormats;
-         methodFormat < header._methodFormats + header._numberOfMethods; methodFormat++) {
-        this->exportMethodFormat(stream, *methodFormat);
-    }
-
-    BinaryStreamUtil::write16BitsNumberStream(stream, header._numberOfVariables);
-    for (VariableFormat* variableFormat = header._variableFormats;
-         variableFormat < header._variableFormats + header._numberOfVariables; variableFormat++) {
-        this->exportVariableFormat(stream, *variableFormat);
-    }
-
-    BinaryStreamUtil::write32BitsNumberStream(stream, header._bytecodeSize);
-}
-
-
 uint32_t computeAttributesSize(std::vector<Attribute*>& attrs) {
     uint32_t total = 0;
 
-    for (auto* attr: attrs) {
+    for(auto* attr : attrs) {
         total += attr->getSize();
     }
 
     return total;
 }
 
-void ClassFile::exportAttributes(std::ostream&stream, Format&format) {
-    BinaryStreamUtil::write32BitsNumberStream(stream, computeAttributesSize(format._attributes));
+void Attributed::output(std::ostream& stream) {
+    BinaryStreamUtil::write32BitsNumberStream(stream, computeAttributesSize(_attributes));
 
-    for (auto* attr: format._attributes) {
+    for(auto* attr : _attributes) {
         BinaryStreamUtil::write32BitsNumberStream(stream, attr->getType());
         BinaryStreamUtil::write32BitsNumberStream(stream, attr->getSize());
 
-        switch (attr->getType()) {
+        switch(attr->getType()) {
             case CONSTANT_VALUE: {
-                auto* castAttr = (ConstantValueAttribute *)attr;
+                const auto* castAttr = dynamic_cast<ConstantValueAttribute*>(attr);
                 BinaryStreamUtil::write32BitsNumberStream(stream, castAttr->getValueIndex());
                 break;
             }
             case CODE: {
-                auto* castAttr = (CodeAttribute *)attr;
+                const auto* castAttr = dynamic_cast<CodeAttribute*>(attr);
                 BinaryStreamUtil::write32BitsNumberStream(stream, castAttr->getCodeStart());
                 BinaryStreamUtil::write32BitsNumberStream(stream, castAttr->getCodeLength());
                 BinaryStreamUtil::write16BitsNumberStream(stream, castAttr->getMaxStack());
                 break;
             }
-            default:{}
+            default: {
+            }
         }
     }
 }
 
-void ClassFile::exportClassFormat(std::ostream&stream, ClassFormat&format) {
-    BinaryStreamUtil::write16BitsNumberStream(stream, format._flags);
-    BinaryStreamUtil::write32BitsNumberStream(stream, format._name);
-    BinaryStreamUtil::write32BitsNumberStream(stream, format._namespace);
-    BinaryStreamUtil::write32BitsNumberStream(stream, format._superclass);
-    BinaryStreamUtil::write8BitsNumberStream(stream, format._indexable);
-    BinaryStreamUtil::write8BitsNumberStream(stream, format._primitive);
-    BinaryStreamUtil::write8BitsNumberStream(stream, format._indexedSlotSize);
-    BinaryStreamUtil::write8BitsNumberStream(stream, format._type);
-
-    this->exportAttributes(stream, format);
+uint32_t Attributed::getNumberOfAttributes() const {
+    return _attributes.size();
 }
 
-void ClassFile::exportMethodFormat(std::ostream&stream, MethodFormat&format) {
-    BinaryStreamUtil::write16BitsNumberStream(stream, format._flags);
-    BinaryStreamUtil::write32BitsNumberStream(stream, format._name);
-    BinaryStreamUtil::write32BitsNumberStream(stream, format._returnType);
-    BinaryStreamUtil::write16BitsNumberStream(stream, format._numberOfArguments);
-
-    for (uint32_t* arg = format._argumentTypes; arg < format._argumentTypes + format._numberOfArguments; arg++)
-        BinaryStreamUtil::write32BitsNumberStream(stream, *arg);
-
-    this->exportAttributes(stream, format);
+Attribute* Attributed::getAttribute(uint32_t attributeNumber) const {
+    if(attributeNumber >= _attributes.size())
+        throw std::out_of_range("This attribute does not exist.");
+    return _attributes[attributeNumber];
 }
 
-void ClassFile::exportVariableFormat(std::ostream&stream, VariableFormat&format) {
-    BinaryStreamUtil::write16BitsNumberStream(stream, format._flags);
-    BinaryStreamUtil::write32BitsNumberStream(stream, format._name);
-    BinaryStreamUtil::write32BitsNumberStream(stream, format._type);
+void Attributed::addAttribute(Attribute* attribute) {
+    _attributes.push_back(attribute);
+}
 
-    this->exportAttributes(stream, format);
+void Attributed::deleteAttribute(uint32_t attributeNumber) {
+    if(attributeNumber >= _attributes.size())
+        throw std::out_of_range("This attribute does not exist.");
+    _attributes.erase(_attributes.begin() + attributeNumber);
+}
+
+void Attributed::deleteAttributes() {
+    for(const auto* attr : _attributes) {
+        delete attr;
+    }
+    _attributes.clear();
+}
+
+ClassFile* Attributed::getClassFile() const {
+    return _classFile;
+}
+
+void Attributed::setClassFile(ClassFile* classFile) {
+    _classFile = classFile;
+}
+
+
+//Class ClassFormat
+
+ClassFormat::~ClassFormat() = default;
+
+void ClassFormat::input(std::istream& stream) {
+    _flags = BinaryStreamUtil::read16BitsNumberStream(stream);
+    _name = BinaryStreamUtil::read32BitsNumberStream(stream);
+    _namespace = BinaryStreamUtil::read32BitsNumberStream(stream);
+    _superclass = BinaryStreamUtil::read32BitsNumberStream(stream);
+    _indexable = BinaryStreamUtil::read8BitsNumberStream(stream);
+    _primitive = BinaryStreamUtil::read8BitsNumberStream(stream);
+    _indexedSlotSize = BinaryStreamUtil::read8BitsNumberStream(stream);
+    _type = static_cast<PrimitiveType>(BinaryStreamUtil::read8BitsNumberStream(stream));
+
+    this->Attributed::input(stream);
+}
+
+void ClassFormat::output(std::ostream& stream) {
+    BinaryStreamUtil::write16BitsNumberStream(stream, _flags);
+    BinaryStreamUtil::write32BitsNumberStream(stream, _name);
+    BinaryStreamUtil::write32BitsNumberStream(stream, _namespace);
+    BinaryStreamUtil::write32BitsNumberStream(stream, _superclass);
+    BinaryStreamUtil::write8BitsNumberStream(stream, _indexable);
+    BinaryStreamUtil::write8BitsNumberStream(stream, _primitive);
+    BinaryStreamUtil::write8BitsNumberStream(stream, _indexedSlotSize);
+    BinaryStreamUtil::write8BitsNumberStream(stream, _type);
+
+    this->Attributed::output(stream);
+}
+
+uint16_t ClassFormat::getFlags() const {
+    return _flags;
+}
+
+void ClassFormat::setFlags(uint16_t flags) {
+    _flags = flags;
+}
+
+const BvSlot* ClassFormat::getName() const {
+    return _classFile->getLiteral(getNameIndex());
+}
+
+uint32_t ClassFormat::getNameIndex() const {
+    return _name;
+}
+
+void ClassFormat::setNameIndex(uint32_t index) {
+    _name = index;
+}
+
+const BvSlot* ClassFormat::getNamespace() const {
+    return _classFile->getLiteral(getNamespaceIndex());
+}
+
+uint32_t ClassFormat::getNamespaceIndex() const {
+    return _namespace;
+}
+
+void ClassFormat::setNamespaceIndex(uint32_t index) {
+    _namespace = index;
+}
+
+const BvSlot* ClassFormat::getSuperclass() const {
+    return _classFile->getLiteral(getSuperclassIndex());
+}
+
+uint32_t ClassFormat::getSuperclassIndex() const {
+    return _superclass;
+}
+
+void ClassFormat::setSuperclassIndex(uint32_t index) {
+    _superclass = index;
+}
+
+bool ClassFormat::isIndexable() const {
+    return _indexable == 1;
+}
+
+void ClassFormat::setIndexable(bool indexable) {
+    _indexable = indexable ? 1 : 0;
+}
+
+bool ClassFormat::isPrimitive() const {
+    return _primitive == 1;
+}
+
+void ClassFormat::setPrimitive(bool primitive) {
+    _primitive = primitive ? 1 : 0;
+}
+
+uint8_t ClassFormat::getIndexedSlotSize() const {
+    return _indexedSlotSize;
+}
+
+void ClassFormat::setIndexedSlotSize(uint8_t slotSize) {
+    _indexedSlotSize = slotSize;
+}
+
+PrimitiveType ClassFormat::getPrimitiveType() const {
+    return _type;
+}
+
+void ClassFormat::setPrimitiveType(PrimitiveType primitiveType) {
+    _type = primitiveType;
+}
+
+
+// Class MethodFormat
+
+MethodFormat::~MethodFormat() {
+    this->destroyArgumentTypes();
+}
+
+void MethodFormat::destroy() {
+    Attributed::destroy();
+    this->destroyArgumentTypes();
+}
+
+void MethodFormat::input(std::istream& stream) {
+    this->destroy();
+
+    _flags = BinaryStreamUtil::read16BitsNumberStream(stream);
+    _name = BinaryStreamUtil::read32BitsNumberStream(stream);
+    _returnType = BinaryStreamUtil::read32BitsNumberStream(stream);
+
+    const uint16_t numberOfArguments = BinaryStreamUtil::read16BitsNumberStream(stream);
+    for(uint16_t arg = 0; arg < numberOfArguments; arg++)
+        _argumentTypes.push_back(BinaryStreamUtil::read32BitsNumberStream(stream));
+
+    this->Attributed::input(stream);
+}
+
+void MethodFormat::output(std::ostream& stream) {
+    BinaryStreamUtil::write16BitsNumberStream(stream, _flags);
+    BinaryStreamUtil::write32BitsNumberStream(stream, _name);
+    BinaryStreamUtil::write32BitsNumberStream(stream, _returnType);
+
+    const uint16_t numberOfArguments = _argumentTypes.size();
+    BinaryStreamUtil::write16BitsNumberStream(stream, numberOfArguments);
+    for(uint16_t arg = 0; arg < numberOfArguments; arg++)
+        BinaryStreamUtil::write32BitsNumberStream(stream, _argumentTypes[arg]);
+
+    this->Attributed::output(stream);
+}
+
+uint16_t MethodFormat::getFlags() const {
+    return _flags;
+}
+
+void MethodFormat::setFlags(const uint16_t flags) {
+    _flags = flags;
+}
+
+const BvSlot* MethodFormat::getName() const {
+    return _classFile->getLiteral(getNameIndex());
+}
+
+uint32_t MethodFormat::getNameIndex() const {
+    return _name;
+}
+
+void MethodFormat::setNameIndex(const uint32_t index) {
+    _name = index;
+}
+
+const BvSlot* MethodFormat::getReturnType() const {
+    return _classFile->getLiteral(getReturnTypeIndex());
+}
+
+uint32_t MethodFormat::getReturnTypeIndex() const {
+    return _returnType;
+}
+
+void MethodFormat::setReturnTypeIndex(const uint32_t index) {
+    _returnType = index;
+}
+
+uint16_t MethodFormat::getNumberOfArguments() const {
+    return _argumentTypes.size();
+}
+
+const BvSlot* MethodFormat::getArgumentType(uint16_t argumentNumber) const {
+    return _classFile->getLiteral(getArgumentTypeIndex(argumentNumber));
+}
+
+uint32_t MethodFormat::getArgumentTypeIndex(uint16_t argumentNumber) const {
+    if(argumentNumber >= _argumentTypes.size())
+        throw std::out_of_range("This argument does not exist.");
+    return _argumentTypes[argumentNumber];
+}
+
+void MethodFormat::addArgumentTypeIndex(uint32_t index) {
+    _argumentTypes.push_back(index);
+}
+
+void MethodFormat::deleteArgumentType(uint16_t argumentNumber) {
+    if(argumentNumber >= _argumentTypes.size())
+        throw std::out_of_range("This argument does not exist.");
+    _argumentTypes.erase(_argumentTypes.begin() + argumentNumber);
+}
+
+void MethodFormat::destroyArgumentTypes() {
+    _attributes.clear();
+}
+
+
+// Class VariableFormat
+
+VariableFormat::~VariableFormat() = default;
+
+void VariableFormat::input(std::istream& stream) {
+    _flags = BinaryStreamUtil::read16BitsNumberStream(stream);
+    _name = BinaryStreamUtil::read32BitsNumberStream(stream);
+    _type = BinaryStreamUtil::read32BitsNumberStream(stream);
+
+    this->Attributed::input(stream);
+}
+
+void VariableFormat::output(std::ostream& stream) {
+    BinaryStreamUtil::write16BitsNumberStream(stream, _flags);
+    BinaryStreamUtil::write32BitsNumberStream(stream, _name);
+    BinaryStreamUtil::write32BitsNumberStream(stream, _type);
+
+    this->Attributed::output(stream);
+}
+
+uint16_t VariableFormat::getFlags() const {
+    return _flags;
+}
+
+void VariableFormat::setFlags(const uint16_t flags) {
+    _flags = flags;
+}
+
+const BvSlot* VariableFormat::getName() const {
+    return _classFile->getLiteral(getNameIndex());
+}
+
+uint32_t VariableFormat::getNameIndex() const {
+    return _name;
+}
+
+void VariableFormat::setNameIndex(uint32_t index) {
+    _name = index;
+}
+
+const BvSlot* VariableFormat::getType() const {
+    return _classFile->getLiteral(getTypeIndex());
+}
+
+uint32_t VariableFormat::getTypeIndex() const {
+    return _type;
+}
+
+void VariableFormat::setTypeIndex(uint32_t index) {
+    _type = index;
+}
+
+
+// Class ClassFile
+
+ClassFile::ClassFile() {
+    _classFormat.setClassFile(this);
+}
+
+ClassFile::~ClassFile() {
+    this->deleteLiterals();
+    this->deleteMethodFormats();
+    this->deleteVariableFormats();
+    this->deleteBytecodes();
+}
+
+void ClassFile::destroy() {
+    this->deleteLiterals();
+    this->deleteMethodFormats();
+    this->deleteVariableFormats();
+    this->deleteBytecodes();
+}
+
+void ClassFile::inputLiterals(std::istream& stream) {
+    BvSlot* currentLiteralsSlot = _literals;
+    while((currentLiteralsSlot - _literals) < _literalsSize) {
+        *currentLiteralsSlot = BinaryStreamUtil::read64BitsNumberStream(stream);
+        BvSlot* data = currentLiteralsSlot + 1;
+        ObjectHeader literalHeader(currentLiteralsSlot);
+        if((currentLiteralsSlot - _literals) + literalHeader.getSlotSizeWithHeader() > _literalsSize)
+            throw ClassLoadingError("Literals size and headers do not match.");
+        if(!literalHeader.isBytes()) {
+            *data = BinaryStreamUtil::read64BitsNumberStream(stream);
+        } else {
+            BinaryStreamUtil::readStream(stream, data, literalHeader.getSlotSize() * sizeof(BvSlot));
+        }
+        currentLiteralsSlot += literalHeader.getSlotSizeWithHeader();
+    }
+}
+
+void ClassFile::input(std::istream& stream) {
+    this->destroy();
+
+    try {
+        _magicNumber = BinaryStreamUtil::read32BitsNumberStream(stream);
+        _version[0] = BinaryStreamUtil::read16BitsNumberStream(stream);
+        _version[1] = BinaryStreamUtil::read16BitsNumberStream(stream);
+        _literalsSize = BinaryStreamUtil::read32BitsNumberStream(stream);
+        BinaryStreamUtil::read32BitsNumberStream(stream);
+
+        _literals = new BvSlot[_literalsSize]();
+        this->inputLiterals(stream);
+
+        _classFormat.input(stream);
+
+        const uint16_t numberOfMethods = BinaryStreamUtil::read16BitsNumberStream(stream);
+        for(uint16_t methodIndex = 0; methodIndex < numberOfMethods; methodIndex++) {
+            auto* method = new MethodFormat();
+            method->setClassFile(this);
+            method->input(stream);
+            _methodFormats.push_back(method);
+        }
+
+        const uint16_t numberOfVariables = BinaryStreamUtil::read16BitsNumberStream(stream);
+        for(uint16_t variableIndex = 0; variableIndex < numberOfVariables; variableIndex++) {
+            auto* variable = new VariableFormat();
+            variable->setClassFile(this);
+            variable->input(stream);
+            _variableFormats.push_back(variable);
+        }
+
+        _bytecodeSize = BinaryStreamUtil::read32BitsNumberStream(stream);
+        _bytecodes = new BvBytecode[_bytecodeSize]();
+        BinaryStreamUtil::readStream(stream, _bytecodes, sizeof(BvBytecode) * _bytecodeSize);
+    } catch([[maybe_unused]] EndOfStreamError const& ex) {
+        throw ClassLoadingError("Reached end-of-stream before class was fully loaded.");
+    } catch([[maybe_unused]] StreamError const& ex) {
+        throw ClassLoadingError("Reading error was encountered while loading class.");
+    }
+}
+
+void ClassFile::outputLiterals(std::ostream& stream) {
+    const BvSlot* currentLiteralsSlot = _literals;
+    while((currentLiteralsSlot - _literals) < _literalsSize) {
+        BinaryStreamUtil::write64BitsNumberStream(stream, *currentLiteralsSlot);
+        const BvSlot* data = currentLiteralsSlot + 1;
+        ObjectHeader literalHeader(currentLiteralsSlot);
+        if((currentLiteralsSlot - _literals) + literalHeader.getSlotSizeWithHeader() > _literalsSize)
+            throw ClassLoadingError("Literals size and headers do not match.");
+        if(!literalHeader.isBytes()) {
+            BinaryStreamUtil::write64BitsNumberStream(stream, *data);
+        } else {
+            BinaryStreamUtil::writeStream(stream, data, literalHeader.getSlotSize() * sizeof(BvSlot));
+        }
+        currentLiteralsSlot += literalHeader.getSlotSizeWithHeader();
+    }
+}
+
+void ClassFile::output(std::ostream& stream) {
+    try {
+        BinaryStreamUtil::write32BitsNumberStream(stream, _magicNumber);
+        BinaryStreamUtil::write16BitsNumberStream(stream, _version[0]);
+        BinaryStreamUtil::write16BitsNumberStream(stream, _version[1]);
+        BinaryStreamUtil::write32BitsNumberStream(stream, _literalsSize);
+        BinaryStreamUtil::write32BitsNumberStream(stream, 0);
+
+        this->outputLiterals(stream);
+
+        _classFormat.output(stream);
+
+        const uint16_t numberOfMethods = _methodFormats.size();
+        BinaryStreamUtil::write16BitsNumberStream(stream, numberOfMethods);
+        for(uint16_t methodIndex = 0; methodIndex < numberOfMethods; methodIndex++) {
+            _methodFormats[methodIndex]->output(stream);
+        }
+
+        const uint16_t numberOfVariables = _variableFormats.size();
+        BinaryStreamUtil::write16BitsNumberStream(stream, numberOfVariables);
+        for(uint16_t variableIndex = 0; variableIndex < numberOfVariables; variableIndex++) {
+            _variableFormats[variableIndex]->output(stream);
+        }
+
+        BinaryStreamUtil::write32BitsNumberStream(stream, _bytecodeSize);
+        BinaryStreamUtil::writeStream(stream, _bytecodes, sizeof(BvBytecode) * _bytecodeSize);
+    } catch([[maybe_unused]] EndOfStreamError const& ex) {
+        throw ClassLoadingError("Reached end-of-stream before class was fully loaded.");
+    } catch([[maybe_unused]] StreamError const& ex) {
+        throw ClassLoadingError("Reading error was encountered while loading class.");
+    }
+}
+
+uint32_t ClassFile::getMagicNumber() const {
+    return _magicNumber;
+}
+
+void ClassFile::setMagicNumber(uint32_t magicNumber) {
+    _magicNumber = magicNumber;
+}
+
+const uint16_t* ClassFile::getVersion() const {
+    return _version;
+}
+
+void ClassFile::setVersion(const uint16_t* version) {
+    memcpy(_version, version, 2 * sizeof(uint16_t));
+}
+
+uint32_t ClassFile::getLiteralsSize() const {
+    return _literalsSize;
+}
+
+const BvSlot* ClassFile::getLiterals() const {
+    return _literals;
+}
+
+void ClassFile::setLiterals(uint32_t size, const BvSlot* literals) {
+    this->deleteLiterals();
+    _literals = new BvSlot[size]();
+    _literalsSize = size;
+    memcpy(_literals, literals, sizeof(BvSlot) * size);
 }
 
 const BvSlot* ClassFile::getLiteral(uint32_t index) const {
-    BvSlot* slot = _header._literals;
-    for (int i = 0; i < index; i++) {
+    BvSlot* slot = _literals;
+    for(int i = 0; i < index; i++) {
         slot = ObjectHeader::nextObject(slot);
     }
     return slot;
 }
 
-uint32_t ClassFile::getMagicNumber() {
-    return _header._magicNumber;
+void ClassFile::deleteLiterals() {
+    delete[] _literals;
+    _literals = nullptr;
+    _literalsSize = 0;
 }
 
-void ClassFile::setMagicNumber(uint32_t magicNumber) {
-    _header._magicNumber = magicNumber;
-}
-
-uint16_t* ClassFile::getVersion() {
-    return _header._version;
-}
-
-void ClassFile::setVersion(uint16_t* magicNumber) {
-    memcpy(_header._version, magicNumber, 2 * sizeof(uint16_t));
-}
-
-uint32_t ClassFile::getLiteralsSize() const {
-    return _header._literalsSize;
-}
-
-void ClassFile::setLiteralsSize(uint32_t size) {
-    this->destroyLiterals();
-    _header._literals = (BvSlot *)calloc(size, sizeof(BvSlot));
-    _header._literalsSize = size;
-}
-
-BvSlot* ClassFile::getLiterals() const {
-    return _header._literals;
-}
-
-void ClassFile::setLiterals(uint32_t size, BvSlot* literals) {
-    this->destroyLiterals();
-    _header._literals = literals;
-    _header._literalsSize = size;
-}
-
-uint16_t ClassFile::getClassFlags() const {
-    return _header._format._flags;
-}
-
-void ClassFile::setClassFlags(uint16_t flags) {
-    _header._format._flags = flags;
-}
-
-const BvSlot* ClassFile::getClassName() const {
-    return this->getLiteral(_header._format._name);
-}
-
-uint32_t ClassFile::getClassNameIndex() const {
-    return _header._format._name;
-}
-
-void ClassFile::setClassNameIndex(uint32_t index) {
-    _header._format._name = index;
-}
-
-const BvSlot* ClassFile::getNamespace() const {
-    return this->getLiteral(_header._format._namespace);
-}
-
-uint32_t ClassFile::getNamespaceIndex() const {
-    return _header._format._namespace;
-}
-
-void ClassFile::setNamespaceIndex(uint32_t index) {
-    _header._format._namespace = index;
-}
-
-const BvSlot* ClassFile::getSuperclass() const {
-    return this->getLiteral(_header._format._superclass);
-}
-
-uint32_t ClassFile::getSuperclassIndex() const {
-    return _header._format._superclass;
-}
-
-void ClassFile::setSuperclassIndex(uint32_t index) {
-    _header._format._superclass = index;
-}
-
-bool ClassFile::isIndexable() const {
-    return _header._format._indexable == 1;
-}
-
-void ClassFile::setIndexable(bool indexable) {
-    _header._format._indexable = indexable ? 1 : 0;
-}
-
-bool ClassFile::isPrimitive() const {
-    return _header._format._primitive == 1;
-}
-
-void ClassFile::setPrimitive(bool primitive) {
-    _header._format._primitive = primitive ? 1 : 0;
-}
-
-uint8_t ClassFile::getIndexedSlotSize() const {
-    return _header._format._indexedSlotSize;
-}
-
-void ClassFile::setIndexedSlotSize(uint8_t slotSize) {
-    _header._format._indexedSlotSize = slotSize;
-}
-
-PrimitiveType ClassFile::getPrimitiveType() const {
-    return _header._format._type;
-}
-
-void ClassFile::setPrimitiveType(PrimitiveType primitiveType) {
-    _header._format._type = primitiveType;
-}
-
-std::vector<Attribute*>& ClassFile::getClassAttributes() {
-    return _header._format._attributes;
+ClassFormat* ClassFile::getClassFormat() {
+    return &_classFormat;
 }
 
 uint16_t ClassFile::getNumberOfMethods() const {
-    return _header._numberOfMethods;
-}
-
-void ClassFile::setNumberOfMethods(uint16_t number) {
-    this->destroyMethodFormats();
-    _header._numberOfMethods = number;
-    _header._methodFormats = (MethodFormat *)calloc(number, sizeof(MethodFormat));
+    return _methodFormats.size();
 }
 
 MethodFormat* ClassFile::getMethodFormat(uint16_t methodNumber) const {
-    if (methodNumber >= _header._numberOfMethods)
+    if(methodNumber >= _methodFormats.size())
         throw std::out_of_range("This method does not exist.");
-    return _header._methodFormats + methodNumber;
+    return _methodFormats[methodNumber];
 }
 
-uint16_t ClassFile::getMethodFlags(uint16_t methodNumber) const {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return methodFormat->_flags;
+void ClassFile::addMethodFormat(MethodFormat* method) {
+    method->setClassFile(this);
+    _methodFormats.push_back(method);
 }
 
-void ClassFile::setMethodFlags(uint16_t methodNumber, uint16_t flags) {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    methodFormat->_flags = flags;
+void ClassFile::deleteMethodFormat(uint16_t methodNumber) {
+    if(methodNumber >= _methodFormats.size())
+        throw std::out_of_range("This method does not exist.");
+    _methodFormats.erase(_methodFormats.begin() + methodNumber);
 }
 
-const BvSlot* ClassFile::getMethodName(uint16_t methodNumber) const {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return this->getLiteral(methodFormat->_name);
-}
-
-uint32_t ClassFile::getMethodNameIndex(uint16_t methodNumber) const {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return methodFormat->_name;
-}
-
-void ClassFile::setMethodNameIndex(uint16_t methodNumber, uint32_t index) {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    methodFormat->_name = index;
-}
-
-const BvSlot* ClassFile::getMethodReturnType(uint16_t methodNumber) const {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return this->getLiteral(methodFormat->_returnType);
-}
-
-uint32_t ClassFile::getMethodReturnTypeIndex(uint16_t methodNumber) const {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return methodFormat->_returnType;
-}
-
-void ClassFile::setMethodReturnTypeIndex(uint16_t methodNumber, uint32_t index) {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    methodFormat->_returnType = index;
-}
-
-uint16_t ClassFile::getMethodNumberOfArguments(uint16_t methodNumber) const {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return methodFormat->_numberOfArguments;
-}
-
-void ClassFile::setMethodNumberOfArguments(uint16_t methodNumber, uint16_t number) {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    this->destroyMethodArgumentTypes(methodFormat);
-    methodFormat->_numberOfArguments = number;
-    methodFormat->_argumentTypes = (uint32_t *)calloc(number, sizeof(uint32_t));
-}
-
-uint32_t* ClassFile::getMethodArgument(MethodFormat* method, uint16_t argumentNumber) const {
-    if (argumentNumber >= method->_numberOfArguments)
-        throw std::out_of_range("This argument does not exist.");
-    return method->_argumentTypes + argumentNumber;
-}
-
-const BvSlot* ClassFile::getMethodArgumentType(uint16_t methodNumber, uint16_t argumentNumber) const {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return this->getLiteral(*this->getMethodArgument(methodFormat, argumentNumber));
-}
-
-uint32_t ClassFile::getMethodArgumentTypeIndex(uint16_t methodNumber, uint16_t argumentNumber) const {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return *this->getMethodArgument(methodFormat, argumentNumber);
-}
-
-void ClassFile::setMethodArgumentTypeIndex(uint16_t methodNumber, uint16_t argumentNumber, uint32_t index) {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    *this->getMethodArgument(methodFormat, argumentNumber) = index;
-}
-
-std::vector<Attribute*>& ClassFile::getMethodAttributes(uint16_t methodNumber) {
-    MethodFormat* methodFormat = this->getMethodFormat(methodNumber);
-    return methodFormat->_attributes;
+void ClassFile::deleteMethodFormats() {
+    for(const MethodFormat* mFormat : _methodFormats) {
+        delete mFormat;
+    }
+    _methodFormats.clear();
 }
 
 uint16_t ClassFile::getNumberOfVariables() const {
-    return _header._numberOfVariables;
-}
-
-void ClassFile::setNumberOfVariables(uint16_t number) {
-    this->destroyVariableFormats();
-    _header._numberOfVariables = number;
-    _header._variableFormats = (VariableFormat *)calloc(number, sizeof(VariableFormat));
+    return _variableFormats.size();
 }
 
 VariableFormat* ClassFile::getVariableFormat(uint16_t variableNumber) const {
-    if (variableNumber >= _header._numberOfVariables)
+    if(variableNumber >= _variableFormats.size())
         throw std::out_of_range("This variable does not exist.");
-    return _header._variableFormats + variableNumber;
+    return _variableFormats[variableNumber];
 }
 
-uint16_t ClassFile::getVariableFlags(uint16_t variableNumber) const {
-    VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
-    return variableFormat->_flags;
+void ClassFile::addVariableFormat(VariableFormat* variable) {
+    variable->setClassFile(this);
+    _variableFormats.push_back(variable);
 }
 
-void ClassFile::setVariableFlags(uint16_t variableNumber, uint16_t flags) {
-    VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
-    variableFormat->_flags = flags;
+void ClassFile::deleteVariableFormat(uint16_t variableNumber) {
+    if(variableNumber >= _variableFormats.size())
+        throw std::out_of_range("This variable does not exist.");
+    _variableFormats.erase(_variableFormats.begin() + variableNumber);
 }
 
-const BvSlot* ClassFile::getVariableName(uint16_t variableNumber) const {
-    VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
-    return this->getLiteral(variableFormat->_name);
+void ClassFile::deleteVariableFormats() {
+    for(VariableFormat* vFormat : _variableFormats) {
+        delete vFormat;
+    }
+    _variableFormats.clear();
 }
-
-uint32_t ClassFile::getVariableNameIndex(uint16_t variableNumber) const {
-    VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
-    return variableFormat->_name;
-}
-
-void ClassFile::setVariableNameIndex(uint16_t variableNumber, uint32_t index) {
-    VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
-    variableFormat->_name = index;
-}
-
-const BvSlot* ClassFile::getVariableType(uint16_t variableNumber) const {
-    VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
-    return this->getLiteral(variableFormat->_type);
-}
-
-uint32_t ClassFile::getVariableTypeIndex(uint16_t variableNumber) const {
-    VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
-    return variableFormat->_type;
-}
-
-void ClassFile::setVariableTypeIndex(uint16_t variableNumber, uint32_t index) {
-    VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
-    variableFormat->_type = index;
-}
-
-std::vector<Attribute*>& ClassFile::getVariableAttributes(uint16_t variableNumber) {
-    VariableFormat* variableFormat = this->getVariableFormat(variableNumber);
-    return variableFormat->_attributes;
-}
-
 
 uint32_t ClassFile::getBytecodesSize() const {
-    return _header._bytecodeSize;
+    return _bytecodeSize;
 }
 
-void ClassFile::setBytecodesSize(uint32_t size) {
-    this->destroyBytecodes();
-    _bytecodes = (BvBytecode *)calloc(size, sizeof(BvBytecode));
-    _header._bytecodeSize = size;
-}
-
-BvBytecode* ClassFile::getBytecodes() const {
+const BvBytecode* ClassFile::getBytecodes() const {
     return _bytecodes;
 }
 
-void ClassFile::setBytecodes(uint32_t size, BvBytecode* bytecodes) {
-    this->destroyBytecodes();
-    _bytecodes = bytecodes;
-    _header._bytecodeSize = size;
+void ClassFile::setBytecodes(uint32_t size, const BvBytecode* bytecodes) {
+    this->deleteBytecodes();
+    _bytecodes = new BvBytecode[size]();
+    _bytecodeSize = size;
+    memcpy(_bytecodes, bytecodes, sizeof(BvBytecode) * size);
+}
+
+void ClassFile::deleteBytecodes() {
+    delete[] _bytecodes;
+    _bytecodes = nullptr;
+    _bytecodeSize = 0;
 }

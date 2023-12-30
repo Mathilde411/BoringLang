@@ -22,10 +22,11 @@
 #include <stdexcept>
 
 namespace BoringLang {
-
-    typedef uint64_t BvUInt;
     typedef int64_t BvInt;
     typedef double BvFloat;
+    typedef uint8_t BvByte;
+    typedef bool BvBool;
+
     typedef uint64_t BvSlot;
     typedef uint8_t BvBytecode;
 
@@ -52,7 +53,6 @@ namespace BoringLang {
         CLASS_NAME_TYPE = 4 | STRING_TYPE,
         METHOD_NAME_TYPE = 5 | STRING_TYPE,
         VARIABLE_NAME_TYPE = 6 | STRING_TYPE,
-
     };
 
     class ObjectHeader {
@@ -65,71 +65,112 @@ namespace BoringLang {
         uint32_t _classIndex;
         uint8_t _flags;
 
-        void loadPrimitiveHeader(const BvSlot* slot);
-        void loadSizeExtension(const BvSlot* slot);
-        void loadObjectHeader(const BvSlot* slot, bool loadSize);
     public:
         explicit ObjectHeader(const BvSlot* header);
+
         ObjectHeader(PrimitiveType format, uint64_t byteSize);
+
         ObjectHeader(uint64_t byteSize, uint32_t hash, uint32_t classIndex, uint8_t flags);
 
         [[nodiscard]]
         bool isPrimitive() const;
+
         [[nodiscard]]
         bool isEmptySpace() const;
+
         [[nodiscard]]
         bool isUnavailableSpace() const;
+
         [[nodiscard]]
         bool isBytes() const;
+
         [[nodiscard]]
         bool isString() const;
+
         [[nodiscard]]
         bool isDoubleHeader() const;
+
         [[nodiscard]]
         PrimitiveType getFormat() const;
+
         [[nodiscard]]
         uint64_t getSize() const;
+
         [[nodiscard]]
         uint64_t getSlotSize() const;
+
         [[nodiscard]]
         uint32_t getHash() const;
+
         [[nodiscard]]
         uint32_t getClassIndex() const;
+
         [[nodiscard]]
         uint8_t getFlags() const;
+
         [[nodiscard]]
         uint64_t getSlotSizeWithHeader() const;
-        void exportHeader(BvSlot* slot);
+
+        void exportHeader(BvSlot* slot) const;
+
         [[nodiscard]]
         static BvSlot* nextObject(BvSlot* slot);
     };
 
-    class PrimitiveTypeError : public std::runtime_error {
+    class PrimitiveTypeError final : public std::runtime_error {
     public:
-        PrimitiveTypeError():runtime_error("Error when reading stream."){}
-        explicit PrimitiveTypeError(std::string const& msg):runtime_error(msg.c_str()){}
+        PrimitiveTypeError(): runtime_error("Error when reading stream.") {
+        }
+
+        explicit PrimitiveTypeError(std::string const& msg): runtime_error(msg.c_str()) {
+        }
     };
 
     class PrimitivesUtil {
     public:
-        static int64_t getUnslotedInt(const BvSlot* slot);
-        static int64_t getInt(const BvSlot* slot);
-        static void putUnslotedInt(BvSlot* slot, int64_t number);
-        static double getUnslotedFloat(const BvSlot* slot);
-        static double getFloat(const BvSlot* slot);
-        static void putUnslotedFloat(BvSlot* slot, double number);
-        static char getUnslotedChar(const BvSlot* slot);
-        static char getChar(const BvSlot* slot);
-        static void putUnslotedChar(BvSlot* slot, char character);
-        static bool getUnslotedBool(const BvSlot* slot);
-        static bool getBool(const BvSlot* slot);
-        static void putUnslotedBool(BvSlot* slot, bool boolean);
-        static uint64_t getUnslotedBytes(const BvSlot* slot, uint8_t** bytes);
-        static uint64_t copyUnslotedBytes(const BvSlot* slot, uint8_t** bytes);
-        static void putUnslotedBytes(BvSlot* slot, uint8_t* bytes, uint64_t size);
+        static BvInt getUnslotedInt(const BvSlot* slot);
+
+        static BvInt getInt(const BvSlot* slot);
+
+        static void putUnslotedInt(BvSlot* slot, BvInt number);
+
+        static void putInt(BvSlot* slot, BvInt number);
+
+        static BvFloat getUnslotedFloat(const BvSlot* slot);
+
+        static BvFloat getFloat(const BvSlot* slot);
+
+        static void putUnslotedFloat(BvSlot* slot, BvFloat number);
+
+        static void putFloat(BvSlot* slot, BvFloat number);
+
+        static BvByte getUnslotedChar(const BvSlot* slot);
+
+        static BvByte getChar(const BvSlot* slot);
+
+        static void putUnslotedChar(BvSlot* slot, BvByte character);
+
+        static void putChar(BvSlot* slot, BvByte character);
+
+        static BvBool getUnslotedBool(const BvSlot* slot);
+
+        static BvBool getBool(const BvSlot* slot);
+
+        static void putUnslotedBool(BvSlot* slot, BvBool boolean);
+
+        static void putBool(BvSlot* slot, BvBool boolean);
+
+        static uint64_t getUnslotedBytes(BvSlot* slot, BvByte** bytes);
+
+        static uint64_t copyUnslotedBytes(const BvSlot* slot, BvByte** bytes);
+
+        static void putUnslotedBytes(BvSlot* slot, const BvByte* bytes, uint64_t size);
+
         static void copyUnslotedString(const BvSlot* slot, std::string& string);
-        static void putUnslotedString(BvSlot* slot, std::string& string);
-        static void putUnslotedString(BvSlot* slot, PrimitiveType format, std::string& string);
+
+        static void putUnslotedString(BvSlot* slot, const std::string& string);
+
+        static void putUnslotedString(BvSlot* slot, PrimitiveType format, const std::string& string);
     };
 }
 
