@@ -117,7 +117,7 @@ void fillClassFile(BoringLang::ClassFile& clazz) {
         litSize += strSlotHeadSize(literalString);
     litSize += 2;
 
-    BoringLang::BvSlot literals[litSize](0);
+    auto* literals = new BoringLang::BvSlot[litSize](0);
     BoringLang::BvSlot* litSlot = literals;
     for(int i = 0; i < 16; i++) {
         BoringLang::PrimitivesUtil::putUnslotedString(litSlot, literalTypes[i], literalStrings[i]);
@@ -125,6 +125,7 @@ void fillClassFile(BoringLang::ClassFile& clazz) {
     }
     BoringLang::PrimitivesUtil::putUnslotedInt(litSlot, 42424242);
     clazz.setLiterals(litSize, literals);
+    delete[] literals;
 
     clazz.getClassFormat()->setNameIndex(0);
     clazz.getClassFormat()->setNamespaceIndex(1);
