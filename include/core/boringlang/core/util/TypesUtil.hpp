@@ -26,6 +26,7 @@ namespace BoringLang {
     typedef double BvFloat;
     typedef uint8_t BvByte;
     typedef bool BvBool;
+    typedef uint64_t BvHandle;
 
     typedef uint64_t BvSlot;
     typedef uint8_t BvBytecode;
@@ -46,7 +47,7 @@ namespace BoringLang {
         UNAVAILABLE_SPACE = 63,
 
         //Bytes array type
-        BYTES_TYPE = 0 | (1 << 6),
+        BYTES_TYPE = (1 << 6),
         STRING_TYPE = (1 << 5) | BYTES_TYPE,
         NAMESPACE_PATH_TYPE = 2 | STRING_TYPE,
         CLASS_PATH_TYPE = 3 | STRING_TYPE,

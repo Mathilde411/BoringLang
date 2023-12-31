@@ -18,60 +18,60 @@
 #include "boringlang/core/Namespace.hpp"
 
 TEST_CASE("testIsNamespace", "[testIsNamespace]") {
-    BoringLang::Namespace ns;
+    BoringLang::RootNamespace ns(nullptr);
     REQUIRE(ns.isNamespace());
 }
 
 TEST_CASE("testNoChildInEmptyNamespace", "[testNoChildInEmptyNamespace]") {
-    BoringLang::Namespace ns;
+    BoringLang::RootNamespace ns(nullptr);
     REQUIRE(ns.find("test/") == nullptr);
 }
 
 TEST_CASE("testRootIsSlash", "[testRootIsSlash]") {
-    BoringLang::Namespace ns;
+    BoringLang::RootNamespace ns(nullptr);
     REQUIRE(ns.find("/") == &ns);
 }
 
 TEST_CASE("testSelf", "[testSelf]") {
-    BoringLang::Namespace ns;
+    BoringLang::RootNamespace ns(nullptr);
     BoringLang::Namespace* child = dynamic_cast<BoringLang::Namespace*>(ns.findOrCreate("test/"));
     REQUIRE(ns.find("") == &ns);
     REQUIRE(child->find("") == child);
 }
 
 TEST_CASE("testCaseInsensitiveFind", "[testCaseInsensitiveFind]") {
-    BoringLang::Namespace ns;
+    BoringLang::RootNamespace ns(nullptr);
     BoringLang::Namespace* child = dynamic_cast<BoringLang::Namespace*>(ns.findOrCreate("test/"));
     REQUIRE(ns.find("test/") == child);
     REQUIRE(ns.find("TEST/") == child);
 }
 
 TEST_CASE("testFindOrCreateReturnsExisting", "[testFindOrCreateReturnsExisting]") {
-    BoringLang::Namespace ns;
+    BoringLang::RootNamespace ns(nullptr);
     BoringLang::Namespace* child = dynamic_cast<BoringLang::Namespace*>(ns.findOrCreate("test/"));
     REQUIRE(ns.findOrCreate("test/") == child);
 }
 
 TEST_CASE("testChildFindsRoot", "[testChildFindsRoot]") {
-    BoringLang::Namespace ns;
+    BoringLang::RootNamespace ns(nullptr);
     BoringLang::Namespace* child = dynamic_cast<BoringLang::Namespace*>(ns.findOrCreate("test/"));
     REQUIRE(child->find("/") == &ns);
 }
 
 TEST_CASE("testClassIsNull", "[testChildFindsRoot]") {
-    BoringLang::Namespace ns;
+    BoringLang::RootNamespace ns(nullptr);
     ns.findOrCreate("test/");
     REQUIRE(ns.find("test") == nullptr);
 }
 
 TEST_CASE("testFindFromRoot", "[testChildFindsRoot]") {
-    BoringLang::Namespace ns;
+    BoringLang::RootNamespace ns(nullptr);
     BoringLang::Namespace* child = dynamic_cast<BoringLang::Namespace*>(ns.findOrCreate("test/"));
     REQUIRE(child->find("/test/") == child);
 }
 
 TEST_CASE("testComplexTree", "[testChildFindsRoot]") {
-    BoringLang::Namespace ns;
+    BoringLang::RootNamespace ns(nullptr);
     BoringLang::Namespace* child1 = dynamic_cast<BoringLang::Namespace*>(ns.findOrCreate("test1/"));
     BoringLang::Namespace* child2 = dynamic_cast<BoringLang::Namespace*>(ns.findOrCreate("test2/"));
     BoringLang::Namespace* child3 = dynamic_cast<BoringLang::Namespace*>(child2->findOrCreate("test1/"));
@@ -80,7 +80,7 @@ TEST_CASE("testComplexTree", "[testChildFindsRoot]") {
 }
 
 TEST_CASE("testWrongNameCreation", "[testWrongNameCreation]") {
-    BoringLang::Namespace ns;
+    BoringLang::RootNamespace ns(nullptr);
     REQUIRE_THROWS_AS(ns.findOrCreate("*"), std::invalid_argument);
     REQUIRE_THROWS_AS(ns.findOrCreate("//test"), std::invalid_argument);
     REQUIRE_THROWS_AS(ns.findOrCreate("/te st"), std::invalid_argument);

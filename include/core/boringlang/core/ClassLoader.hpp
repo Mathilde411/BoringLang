@@ -26,11 +26,9 @@ namespace BoringLang {
     class ClassLoader {
     private:
         Namespace _root;
-        Class* lazyLoad(ClassFile* classFile);
-        Class* fullLoadLoad(ClassFile* classFile);
+        Class* load(ClassFile* classFile);
     public:
-        Class* lazyLoad(std::istream& classFile);
-        Class* fullLoadLoad(std::istream& classFile);
+        Class* load(std::istream& classFile);
 
     };
 

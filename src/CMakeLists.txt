@@ -21,7 +21,6 @@ add_library(${${PROJECT_NAME}_CORE_LIB}
         ${CORE_HEADER_LIST}
         core/Class.cpp
         core/Namespace.cpp
-        core/Namespaceable.cpp
         core/NamespacePath.cpp
         core/Method.cpp
         core/ClassFile.cpp

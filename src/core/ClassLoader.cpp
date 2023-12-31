@@ -19,13 +19,13 @@
 
 using namespace BoringLang;
 
-Class* ClassLoader::lazyLoad(ClassFile* classFile) {
+Class* ClassLoader::load(ClassFile* classFile) {
     std::string namespaceString;
     PrimitivesUtil::copyUnslotedString(classFile->getClassFormat()->getNamespace(), namespaceString);
     std::string className;
     PrimitivesUtil::copyUnslotedString(classFile->getClassFormat()->getName(), className);
 
-    NamespacePath path(namespaceString);
+    const NamespacePath path(namespaceString);
 
     if(!path.isNamespace())
         throw ClassLoadingError("Namespace is invalid.");
@@ -38,39 +38,19 @@ Class* ClassLoader::lazyLoad(ClassFile* classFile) {
     if(ns->find(className) != nullptr)
         throw ClassLoadingError("A class with this name already exists in the same namespace.");
 
-    auto* clazz = new Class(classFile, this, ns, className);
-    ns->addClass(clazz);
+    auto* clazz = new Class(className, ns, this);
+    clazz->setClassFile(classFile);
 
-    clazz->load();
     return clazz;
 }
 
-Class* ClassLoader::fullLoadLoad(ClassFile* classFile) {
-    Class* clazz = lazyLoad(classFile);
-    clazz->init();
-    return clazz;
-}
 
-Class* ClassLoader::lazyLoad(std::istream& classFile) {
+Class* ClassLoader::load(std::istream& classFile) {
     auto* file = new ClassFile();
     Class* clazz = nullptr;
     try {
         file->input(classFile);
-        clazz = lazyLoad(file);
-    } catch([[maybe_unused]] ClassLoadingError& e) {
-        delete file;
-        delete clazz;
-        throw;
-    }
-    return clazz;
-}
-
-Class* ClassLoader::fullLoadLoad(std::istream& classFile) {
-    auto* file = new ClassFile();
-    Class* clazz = nullptr;
-    try {
-        file->input(classFile);
-        clazz = fullLoadLoad(file);
+        clazz = load(file);
     } catch([[maybe_unused]] ClassLoadingError& e) {
         delete file;
         delete clazz;

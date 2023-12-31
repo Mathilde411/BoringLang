@@ -499,7 +499,6 @@ ClassFile::ClassFile() {
 }
 
 ClassFile::~ClassFile() {
-    std::cout << "ClassFile destructor" << std::endl;
     this->deleteLiterals();
     this->deleteMethodFormats();
     this->deleteVariableFormats();

@@ -17,26 +17,24 @@
 #ifndef BORINGLANG_CLASS_HPP
 #define BORINGLANG_CLASS_HPP
 
-
-#include "Namespaceable.hpp"
 #include "Method.hpp"
 #include "InstanceVariable.hpp"
 #include "ClassFile.hpp"
+#include "Namespace.hpp"
 
 namespace BoringLang {
     class ClassLoader;
     class Class : public Namespaceable {
     private:
-        bool initialized;
-        bool loaded;
+        bool _initialized = false;
         ClassLoader* _classLoader{};
         ClassFile* _classFile{};
         BvSlot* _constantPool{};
 
     public:
-        Class(ClassFile* classFile, ClassLoader* classLoader, Namespace* parent, std::string& name);
+        Class(const std::string& name, Namespace* parent, ClassLoader* classLoader) : Namespaceable(name, parent, classLoader) {};
         void init();
-        void load();
+        void setClassFile(ClassFile* file);
     };
 }
 

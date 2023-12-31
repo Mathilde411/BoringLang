@@ -21,51 +21,106 @@
 #include <string>
 #include <set>
 #include <map>
-#include "Namespaceable.hpp"
+#include <vector>
+
+#include "util/TypesUtil.hpp"
+
+namespace BoringLang {
+    class ClassLoader;
+}
 
 namespace BoringLang {
     class NamespacePath;
     class Class;
+    class Namespace;
+    class RootNamespace;
+    class Namespaceable;
 
     struct NamespaceableComparator {
-        bool operator()(Namespaceable* a, Namespaceable* b) const;
+        bool operator()(const Namespaceable* a, const Namespaceable* b) const;
     };
 
     struct NamespaceableNameComparator {
         bool operator()(std::string const& a, std::string const& b) const;
     };
 
+    class Namespaceable {
+    protected:
+        Namespace* _parent;
+        std::string _name;
+        ClassLoader* _classLoader;
+        RootNamespace* _root;
+        BvHandle _handle;
+
+    public:
+
+        Namespaceable(std::string const& name, Namespace* parent, ClassLoader* classLoader);
+        virtual ~Namespaceable();
+
+        [[nodiscard]]
+        const std::string& getName() const;
+
+        [[nodiscard]]
+        Namespace* getParent() const;
+
+        [[nodiscard]]
+        virtual bool isNamespace() const;
+
+        [[nodiscard]]
+        RootNamespace* getRoot() const ;
+
+        [[nodiscard]]
+        BvHandle getHandle() const;
+        void setHandle(BvHandle handle);
+    };
+
     class Namespace : public Namespaceable {
 
     protected:
-        std::set<Namespace*, NamespaceableComparator> _children;
-        std::map<std::string, Namespace*, NamespaceableNameComparator> _indexedChildren;
+        std::set<Namespace*, NamespaceableComparator> _subspaces;
+        std::map<std::string, Namespace*, NamespaceableNameComparator> _indexedSubspaces;
 
         std::set<Class*, NamespaceableComparator> _classes;
         std::map<std::string, Class*, NamespaceableNameComparator> _indexedClasses;
 
-        Namespace(std::string const& name, Namespace* parent);
+        void removeChild(Namespaceable* pNamespace);
+        friend Namespaceable::~Namespaceable();
+
+        Namespace(const std::string& name, Namespace* parent, ClassLoader* classLoader) : Namespaceable(name, parent, classLoader) {}
 
     public:
-        Namespace();
 
         ~Namespace() override;
 
-        void destroy();
-
-        void removeChild(Namespace* pNamespace);
-
-        void addClass(Class* clazz);
-
-        bool isNamespace() override;
+        [[nodiscard]]
+        bool isNamespace() const override;
 
         Namespaceable* findOrCreate(NamespacePath const& path);
 
         Namespaceable* findOrCreate(std::string const& path);
 
+        [[nodiscard]]
         Namespaceable* find(NamespacePath const& path);
 
+        [[nodiscard]]
         Namespaceable* find(std::string const& path);
+    };
+
+    class RootNamespace : public Namespace {
+    protected:
+        std::vector<Namespaceable*> _index;
+
+        BvHandle addToIndex(Namespaceable* namespaceable);
+        void removeFromIndex(BvHandle handle);
+
+
+    public:
+        friend Namespaceable* Namespace::findOrCreate(NamespacePath const& path);
+        friend Namespaceable::~Namespaceable();
+        explicit RootNamespace(ClassLoader* classLoader);
+
+        [[nodiscard]]
+        Namespaceable* getFromIndex(BvHandle handle) const;
     };
 
 }

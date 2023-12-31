@@ -50,7 +50,7 @@ NamespacePath::NamespacePath(Namespaceable* namespaceable) {
     _components = new std::string[_depth];
 
     for(int i = 0; i < _depth; i++) {
-        _components[i] = *(namespaceStack.top()->getName());
+        _components[i] = namespaceStack.top()->getName();
         namespaceStack.pop();
     }
 }

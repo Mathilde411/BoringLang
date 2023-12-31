@@ -21,7 +21,6 @@
 #include "Namespace.hpp"
 
 namespace BoringLang {
-
     class NamespacePath {
     protected:
         bool _representsNamespace;

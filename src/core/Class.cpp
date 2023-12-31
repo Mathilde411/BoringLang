@@ -18,14 +18,12 @@
 
 using namespace BoringLang;
 
-Class::Class(ClassFile* classFile, ClassLoader* classLoader, Namespace* parent, std::string& name) : _classFile(
-        classFile), _classLoader(classLoader), Namespaceable(name, parent), initialized(false), loaded(false) {
+void Class::setClassFile(ClassFile* file) {
+    _classFile = file;
 }
 
 void Class::init() {
-
-}
-
-void Class::load() {
-
+    if(!_initialized) {
+        _initialized = true;
+    }
 }

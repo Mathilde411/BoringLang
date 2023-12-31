@@ -15,21 +15,56 @@
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "boringlang/core/Namespace.hpp"
+#include "boringlang/core/NamespacePath.hpp"
 #include <algorithm>
 
 using namespace BoringLang;
 
-#include "boringlang/core/NamespacePath.hpp"
 
-Namespace::Namespace() : Namespaceable("", nullptr) {
-    _root = this;
+Namespaceable::Namespaceable(std::string const& name, Namespace* parent, ClassLoader* classLoader) {
+    _parent = parent;
+    _name.assign(name);
+    _classLoader = classLoader;
+    if(parent == nullptr) {
+        _root = nullptr;
+    } else {
+        _root = parent->getRoot();
+    }
+    _handle = 0;
 }
 
-Namespace::Namespace(const std::string& name, Namespace* parent) : Namespaceable(name, parent) {
+Namespaceable::~Namespaceable() {
+    if(_parent != nullptr)
+        _parent->removeChild(this);
+    //_root->removeFromIndex(_handle);
+}
+
+const std::string& Namespaceable::getName() const {
+    return _name;
+}
+
+Namespace* Namespaceable::getParent() const {
+    return _parent;
+}
+
+bool Namespaceable::isNamespace() const {
+    return false;
+}
+
+RootNamespace* Namespaceable::getRoot() const {
+    return _root;
+}
+
+BvHandle Namespaceable::getHandle() const {
+    return _handle;
+}
+
+void Namespaceable::setHandle(BvHandle handle) {
+    _handle = handle;
 }
 
 Namespace::~Namespace() {
-    for(Namespace* child : _children) {
+    for(Namespace* child : _subspaces) {
         delete child;
     }
 
@@ -38,17 +73,17 @@ Namespace::~Namespace() {
     }
 }
 
-void Namespace::removeChild(Namespace* child) {
-    _indexedChildren.erase(*child->getName());
-    _children.erase(child);
+void Namespace::removeChild(Namespaceable* child) {
+    if(child->isNamespace()) {
+        _indexedSubspaces.erase(child->getName());
+        _subspaces.erase(dynamic_cast<Namespace*>(child));
+    } else {
+        _indexedClasses.erase(child->getName());
+        _classes.erase(dynamic_cast<Class*>(child));
+    }
 }
 
-
-void Namespace::destroy() {
-    delete this;
-}
-
-bool Namespace::isNamespace() {
+bool Namespace::isNamespace() const {
     return true;
 }
 
@@ -60,24 +95,37 @@ Namespaceable* Namespace::findOrCreate(NamespacePath const& path) {
         std::string name = path.getComponents()[i];
         auto* ns = dynamic_cast<Namespace*>(returnValue);
 
-        if(!path.isNamespace() && i == depth - 1) {
-            if(ns->_indexedClasses.contains(name)) {
-                returnValue = ns->_indexedClasses[name];
+        if(i == depth - 1) {
+            if(!path.isNamespace()) {
+                if(ns->_indexedClasses.contains(name)) {
+                    return ns->_indexedClasses[name];
+                }
+                auto* clazz = new Class(name, ns, _classLoader);
+                ns->_classes.insert(clazz);
+                ns->_indexedClasses[name] = clazz;
+                returnValue = clazz;
             } else {
-                return nullptr;
+                if(ns->_indexedSubspaces.contains(name)) {
+                    return ns->_indexedSubspaces[name];
+                }
+                ns = new Namespace(name, ns, _classLoader);
+                ns->_parent->_subspaces.insert(ns);
+                ns->_parent->_indexedSubspaces[name] = ns;
+                returnValue = ns;
             }
         } else {
-            if(ns->_indexedChildren.contains(name)) {
-                returnValue = ns->_indexedChildren[name];
+            if(ns->_indexedSubspaces.contains(name)) {
+                returnValue = ns->_indexedSubspaces[name];
             } else {
-                ns = new Namespace(name, ns);
-                ns->_parent->_children.insert(ns);
-                ns->_parent->_indexedChildren[name] = ns;
+                ns = new Namespace(name, ns, _classLoader);
+                ns->_parent->_subspaces.insert(ns);
+                ns->_parent->_indexedSubspaces[name] = ns;
                 returnValue = ns;
             }
         }
     }
 
+    _root->addToIndex(returnValue);
     return returnValue;
 }
 
@@ -90,7 +138,7 @@ Namespaceable* Namespace::find(NamespacePath const& path) {
     Namespaceable* returnValue = path.isRooted() ? _root : this;
     int depth = path.getDepth();
     for(int i = 0; i < depth; i++) {
-        std::string name = path.getComponents()[i];
+        const std::string name = path.getComponents()[i];
         auto* ns = dynamic_cast<Namespace*>(returnValue);
 
         if(!path.isNamespace() && i == depth - 1) {
@@ -100,8 +148,8 @@ Namespaceable* Namespace::find(NamespacePath const& path) {
                 return nullptr;
             }
         } else {
-            if(ns->_indexedChildren.contains(name)) {
-                returnValue = ns->_indexedChildren[name];
+            if(ns->_indexedSubspaces.contains(name)) {
+                returnValue = ns->_indexedSubspaces[name];
             } else {
                 return nullptr;
             }
@@ -114,9 +162,6 @@ Namespaceable* Namespace::find(NamespacePath const& path) {
 Namespaceable* Namespace::find(std::string const& path) {
     NamespacePath nsPath(path);
     return this->find(nsPath);
-}
-
-void Namespace::addClass(Class* clazz) {
 }
 
 bool stringEqualsIgnoreCase(const std::string& a, const std::string& b) {
@@ -133,8 +178,32 @@ bool stringEqualsIgnoreCase(const std::string& a, const std::string& b) {
     return res;
 }
 
-bool NamespaceableComparator::operator()(Namespaceable* a, Namespaceable* b) const {
-    return stringEqualsIgnoreCase(*a->getName(), *b->getName());
+RootNamespace::RootNamespace(ClassLoader* classLoader) : Namespace("", nullptr, classLoader) {
+    _root = this;
+    _index.push_back(this);
+}
+
+BvHandle RootNamespace::addToIndex(Namespaceable* namespaceable) {
+    BvHandle res = _index.size();
+    _index.push_back(namespaceable);
+    namespaceable->setHandle(res);
+    return res;
+}
+
+void RootNamespace::removeFromIndex(BvHandle handle) {
+    if(handle >= _index.size())
+        throw std::out_of_range("This handle does not exist");
+    _index[handle] = nullptr;
+}
+
+Namespaceable* RootNamespace::getFromIndex(BvHandle handle) const {
+    if(handle > _index.size())
+        throw std::out_of_range("This handle does not exist");
+    return _index[handle];
+}
+
+bool NamespaceableComparator::operator()(const Namespaceable* a, const Namespaceable* b) const {
+    return stringEqualsIgnoreCase(a->getName(), b->getName());
 }
 
 bool NamespaceableNameComparator::operator()(const std::string& a, const std::string& b) const {
