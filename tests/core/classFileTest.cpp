@@ -112,19 +112,19 @@ void fillClassFile(BoringLang::ClassFile& clazz) {
         BoringLang::CLASS_PATH_TYPE // 15 superclassPath
     };
 
-    uint32_t litSize = 0;
+    uint32_t literalsSize = 0;
     for(std::string const& literalString : literalStrings)
-        litSize += strSlotHeadSize(literalString);
-    litSize += 2;
+        literalsSize += strSlotHeadSize(literalString);
+    literalsSize += 2;
 
-    BoringLang::BvSlot literals[litSize] = {};
+    BoringLang::BvSlot literals[literalsSize] = {};
     BoringLang::BvSlot* litSlot = literals;
     for(int i = 0; i < 16; i++) {
         BoringLang::PrimitivesUtil::putUnslotedString(litSlot, literalTypes[i], literalStrings[i]);
         litSlot = BoringLang::ObjectHeader::nextObject(litSlot);
     }
     BoringLang::PrimitivesUtil::putUnslotedInt(litSlot, 42424242);
-    clazz.setLiterals(litSize, literals);
+    clazz.setLiterals(literalsSize, literals);
 
     clazz.getClassFormat()->setNameIndex(0);
     clazz.getClassFormat()->setNamespaceIndex(1);
