@@ -48,17 +48,21 @@ namespace BoringLang {
     class Attribute {
     public:
         virtual ~Attribute() = default;
-        virtual AttributeType getType();
-        virtual uint32_t getSize();
+        [[nodiscard]]
+        virtual AttributeType getType() const;
+        [[nodiscard]]
+        virtual uint32_t getSize() const;
     };
 
     class ConstantValueAttribute final : public Attribute {
     private:
         uint32_t _valueIndex = BORINGLANG_NO_INDEX;
     public:
-        AttributeType getType() override;
+        [[nodiscard]]
+        AttributeType getType() const override;
 
-        uint32_t getSize() override;
+        [[nodiscard]]
+        uint32_t getSize() const override;
 
         [[nodiscard]]
         uint32_t getValueIndex() const;
@@ -71,9 +75,11 @@ namespace BoringLang {
         uint32_t _codeLength = 0;
         uint16_t _maxStack = 0;
     public:
-        AttributeType getType() override;
+        [[nodiscard]]
+        AttributeType getType() const override;
 
-        uint32_t getSize() override;
+        [[nodiscard]]
+        uint32_t getSize() const override;
 
         [[nodiscard]] uint16_t getMaxStack() const;
 
@@ -133,8 +139,9 @@ namespace BoringLang {
         uint8_t _indexedSlotSize = sizeof(BvSlot);
         PrimitiveType _type = VOID_TYPE;
 
+
+
     public:
-        ~ClassFormat() override;
 
         void input(std::istream& stream) override;
         void output(std::ostream& stream) override;
@@ -183,8 +190,9 @@ namespace BoringLang {
         uint32_t _returnType = BORINGLANG_NO_INDEX; // Index of type CLASS_PATH_TYPE in literals
 
         std::vector<uint32_t> _argumentTypes; // Indexes of type CLASS_PATH_TYPE in literals
+
+
     public:
-        ~MethodFormat() override;
         void destroy() override;
 
         void input(std::istream& stream) override;
@@ -224,8 +232,6 @@ namespace BoringLang {
         uint32_t _type = BORINGLANG_NO_INDEX; // Index of type CLASS_PATH_TYPE in literals
 
     public:
-        ~VariableFormat() override;
-
         void input(std::istream& stream) override;
         void output(std::ostream& stream) override;
 

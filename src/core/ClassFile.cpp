@@ -17,6 +17,8 @@
 #include <cstring>
 #include "boringlang/core/ClassFile.hpp"
 
+#include <iostream>
+
 #include "boringlang/core/Method.hpp"
 #include "boringlang/core/util/BinaryStreamUtil.hpp"
 
@@ -25,22 +27,22 @@ using namespace BoringLang;
 
 // Class Attribute
 
-AttributeType Attribute::getType() {
+AttributeType Attribute::getType() const {
     return NONE;
 }
 
-uint32_t Attribute::getSize() {
+uint32_t Attribute::getSize() const {
     return 8;
 }
 
 
 // Class ConstantValueAttribute
 
-AttributeType ConstantValueAttribute::getType() {
+AttributeType ConstantValueAttribute::getType() const {
     return CONSTANT_VALUE;
 }
 
-uint32_t ConstantValueAttribute::getSize() {
+uint32_t ConstantValueAttribute::getSize() const {
     return 12;
 }
 
@@ -55,11 +57,11 @@ void ConstantValueAttribute::setValueIndex(uint32_t value_index) {
 
 // Class CodeAttribute
 
-AttributeType CodeAttribute::getType() {
+AttributeType CodeAttribute::getType() const {
     return CODE;
 }
 
-uint32_t CodeAttribute::getSize() {
+uint32_t CodeAttribute::getSize() const {
     return 18;
 }
 
@@ -91,8 +93,22 @@ void CodeAttribute::setCodeLength(uint32_t code_length) {
 // Class Attributed
 
 Attributed::~Attributed() {
-    this->deleteAttributes();
-}
+    for(auto* attr : _attributes) {
+        if(attr != nullptr) {
+            switch(attr->getType()) {
+                case CONSTANT_VALUE:
+                    delete dynamic_cast<ConstantValueAttribute*>(attr);
+                    break;
+                case CODE:
+                    delete dynamic_cast<CodeAttribute*>(attr);
+                    break;
+                default:
+                    delete attr;
+            }
+        }
+    }
+    _attributes.clear();
+};
 
 void Attributed::destroy() {
     this->deleteAttributes();
@@ -195,8 +211,22 @@ void Attributed::deleteAttribute(uint32_t attributeNumber) {
 }
 
 void Attributed::deleteAttributes() {
-    for(const auto* attr : _attributes) {
-        delete attr;
+    for(auto* attr : _attributes) {
+        if(attr != nullptr) {
+            switch(attr->getType()) {
+                case CONSTANT_VALUE:
+                    std::cout << "- Destroyed ConstantValueAttribute" << std::endl;
+                    delete dynamic_cast<ConstantValueAttribute*>(attr);
+                    break;
+                case CODE:
+                    std::cout << "- Destroyed CodeAttribute" << std::endl;
+                    delete dynamic_cast<CodeAttribute*>(attr);
+                    break;
+                default:
+                    std::cout << "- Destroyed Default" << std::endl;
+                    delete attr;
+            }
+        }
     }
     _attributes.clear();
 }
@@ -211,8 +241,6 @@ void Attributed::setClassFile(ClassFile* classFile) {
 
 
 //Class ClassFormat
-
-ClassFormat::~ClassFormat() = default;
 
 void ClassFormat::input(std::istream& stream) {
     _flags = BinaryStreamUtil::read16BitsNumberStream(stream);
@@ -319,10 +347,6 @@ void ClassFormat::setPrimitiveType(PrimitiveType primitiveType) {
 
 // Class MethodFormat
 
-MethodFormat::~MethodFormat() {
-    this->destroyArgumentTypes();
-}
-
 void MethodFormat::destroy() {
     Attributed::destroy();
     this->destroyArgumentTypes();
@@ -418,7 +442,6 @@ void MethodFormat::destroyArgumentTypes() {
 
 // Class VariableFormat
 
-VariableFormat::~VariableFormat() = default;
 
 void VariableFormat::input(std::istream& stream) {
     _flags = BinaryStreamUtil::read16BitsNumberStream(stream);
@@ -476,6 +499,7 @@ ClassFile::ClassFile() {
 }
 
 ClassFile::~ClassFile() {
+    std::cout << "ClassFile destructor" << std::endl;
     this->deleteLiterals();
     this->deleteMethodFormats();
     this->deleteVariableFormats();
