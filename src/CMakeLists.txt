@@ -1,9 +1,15 @@
 set(HEADER_LIST
-    ../include/boringlang/memory/Object.hpp
+        ../include/boringlang/memory/ObjectHeader.hpp
+        ../include/boringlang/structure/Class.hpp
+        ../include/boringlang/structure/Namespaceable.hpp
+        ../include/boringlang/structure/Namespace.hpp
 )
 
 add_library(BoringLang
-        Object.cpp
+        memory/ObjectHeader.cpp
+        structure/Class.cpp
+        structure/Namespace.cpp
+        structure/Namespaceable.cpp
         ${HEADER_LIST}
 )
 target_include_directories(BoringLang PUBLIC ../include)
