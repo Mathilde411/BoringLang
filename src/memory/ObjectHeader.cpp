@@ -2,78 +2,79 @@
 
 
 namespace BoringLang::Memory {
-
-    ObjectHeader::ObjectHeader(const bool primitive, const SlotSize slotSize, const PrimitiveType primitiveType,
-                   const uint8_t flags, const uint64_t length,
-                   const uint32_t classPointer) : _layout(primitive, slotSize, primitiveType), _flags(flags),
-                                                  _length(length),
-                                                  _classPointer(classPointer) {
+    ObjectHeader::ObjectHeader(SlotOrHeader* slot) : _header(slot) {
     }
 
-    ObjectHeader::ObjectHeader(const SlotOrHeader* slot) :
-            _length(slot->header.length), _header(slot->header){
-        if(_length == 0xFFFF)
-            _length = (slot + 1)->slot;
+    bool ObjectHeader::arrayed() const {
+        return _header->header.flags.arrayed;
     }
 
-    bool ObjectHeader::isPrimitive() const {
-        return _layout.isPrimitive();
+    void ObjectHeader::setArrayed(const bool value) {
+        _header->header.flags.arrayed = value;
     }
 
-    SlotSize ObjectHeader::getSlotSize() const {
-        return _layout.getSlotSize();
+    SlotSize ObjectHeader::arraySlotSize() const {
+        return _header->header.flags.arraySlotSize;
     }
 
-    PrimitiveType ObjectHeader::getPrimitiveType() const {
-        return _layout.getPrimitiveType();
+    void ObjectHeader::setArraySlotSize(const SlotSize value) {
+        _header->header.flags.arraySlotSize = value;
     }
 
-    uint64_t ObjectHeader::getLength() const {
-        return _length;
+    SpecialSection ObjectHeader::specialSection() const {
+        return _header->header.flags.specialSection;
     }
 
-    uint64_t ObjectHeader::getSlotLength() const {
-        uint8_t ratio;
-        switch(_layout.getSlotSize()) {
-            case BITS_64:
-                ratio = 1;
-                break;
-            case BITS_32:
-                ratio = 2;
-                break;
-            case BITS_16:
-                ratio = 4;
-                break;
-            case BITS_8:
-                ratio = 8;
-                break;
-        }
-
-        return (_length / ratio) + (_length % ratio > 0);
+    void ObjectHeader::setSpecialSection(const SpecialSection value) {
+        _header->header.flags.specialSection = value;
     }
 
-    uint32_t ObjectHeader::getClassPointer() const {
-        return _classPointer;
+    bool ObjectHeader::null() const {
+        return _header->header.flags.null;
     }
 
-    Slot ObjectHeader::buildHeader() const {
-        return (static_cast<uint64_t>(_layout.build()) << 56) |
-               (static_cast<uint64_t>(_flags) << 48) |
-               (_layout.isPrimitive() ?
-                    _length & 0xFFFFFFFFFFFF :
-                    (_length >= 0xFFFF ? _length : 0xFFFF) << 32 | _classPointer
-               );
+    void ObjectHeader::setNull(const bool value) {
+        _header->header.flags.null = value;
     }
 
-    void ObjectHeader::write(Slot* slot) const {
-        *slot = this->buildHeader();
-        if (!_layout.isPrimitive() && _length == 0xFFFF)
-            *(slot + 1) = _length;
+    uint64_t ObjectHeader::length() const {
+        if (_header->header.length != 0xFFFF)
+            return _header->header.length;
+        return (_header + 1)->slot;
     }
 
-    uint8_t ObjectHeader::getHeaderSize() const {
-        return _layout.isPrimitive() || _length != 0xFFFF ? 1 : 2;
+    uint64_t ObjectHeader::lengthWithHeader() const {
+        if (_header->header.length != 0xFFFF)
+            return _header->header.length + 8;
+        return (_header + 1)->slot + 16;
     }
 
+    uint64_t ObjectHeader::slotLength() const {
+        const uint64_t length = this->length();
+        return length / 8 + (length % 8 ? 1 : 0);
+    }
 
+    uint64_t ObjectHeader::slotLengthWithHeader() const {
+        const uint64_t length = this->lengthWithHeader();
+        return length / 8 + (length % 8 ? 1 : 0);
+    }
+
+    Slot* ObjectHeader::slotStart() const {
+        return &(_header + (_header->header.length == 0xFFFF ? 2 : 1))->slot;
+    }
+
+    void ObjectHeader::setLength(const uint64_t value) {
+        if (value >= 0xFFFF) {
+            _header->header.length = 0xFFFF;
+            (_header + 1)->slot = value;
+        } else
+            _header->header.length = value;
+    }
+
+    uint32_t ObjectHeader::classPointer() const {
+        return _header->header.classPointer;
+    }
+
+    void ObjectHeader::setClassPointer(uint32_t value) {
+    }
 }

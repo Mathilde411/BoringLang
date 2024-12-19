@@ -3,11 +3,10 @@
 
 #include <cstdint>
 #include "../structure/Class.hpp"
+#include "Types.hpp"
 
 
 namespace BoringLang::Memory {
-
-    typedef uint64_t Slot;
 
     enum SlotSize : uint8_t {
         BITS_64 = 0b00,
@@ -22,13 +21,15 @@ namespace BoringLang::Memory {
         BLOCKED = 0b10
     };
 
-    struct Flags{
-        bool arrayed : 1;
-        SlotSize arraySlotSize : 2;
-        SpecialSection specialSection : 2;
-        bool null : 1;
-        uint16_t _reserved : 10;
+    struct Flags {
+        bool arrayed: 1;
+        SlotSize arraySlotSize: 2;
+        SpecialSection specialSection: 2;
+        bool null: 1;
+        uint8_t _reserved1: 2;
+        uint8_t _reserved2;
     };
+
     static_assert(sizeof(Flags) == 2);
 
     struct Header {
@@ -36,30 +37,54 @@ namespace BoringLang::Memory {
         uint16_t length;
         uint32_t classPointer;
     };
+
     static_assert(sizeof(Header) == 8);
 
     union SlotOrHeader {
         Slot slot;
         Header header;
     };
+
     static_assert(sizeof(SlotOrHeader) == 8);
 
     class ObjectHeader {
     private:
-        Header _header;
-        uint64_t _length;
-
-        [[nodiscard]] Slot buildHeader() const;
+        SlotOrHeader* _header;
 
     public:
-        ObjectHeader(bool primitive, SlotSize slotSize, PrimitiveType primitiveType, uint8_t flags, uint64_t length,
-                     uint32_t classPointer);
+        explicit ObjectHeader(SlotOrHeader* slot);
 
-        explicit ObjectHeader(const SlotOrHeader* slot);
+        [[nodiscard]] bool arrayed() const;
 
+        void setArrayed(bool value);
 
+        [[nodiscard]] SlotSize arraySlotSize() const;
 
-        void write(Slot* slot) const;
+        void setArraySlotSize(SlotSize value);
+
+        [[nodiscard]] SpecialSection specialSection() const;
+
+        void setSpecialSection(SpecialSection value);
+
+        [[nodiscard]] bool null() const;
+
+        void setNull(bool value);
+
+        [[nodiscard]] uint64_t length() const;
+
+        [[nodiscard]] uint64_t lengthWithHeader() const;
+
+        [[nodiscard]] uint64_t slotLength() const;
+
+        [[nodiscard]] uint64_t slotLengthWithHeader() const;
+
+        [[nodiscard]] Slot* slotStart() const;
+
+        void setLength(uint64_t value);
+
+        [[nodiscard]] uint32_t classPointer() const;
+
+        void setClassPointer(uint32_t value);
     };
 }
 
